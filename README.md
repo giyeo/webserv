@@ -31,3 +31,8 @@ Sec-Fetch-User: ?1
 Sec-Fetch-Dest: document
 Accept-Encoding: gzip, deflate, br
 Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+
+parsing conf files, there are 2 options, ints and string.
+each configuration will be one of those, in case of int, the parse to int should be a success.
+there will be an array "configuration that are integers" {"port", "nqueue", ...}, those should
+parse the conf file with success.
