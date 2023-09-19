@@ -1,13 +1,8 @@
 #include "SocketHandler.hpp"
 
-SocketHandler::SocketHandler(): port(8080), nqueue(5) {
-	screate();
-	soptions();
-	sbind();
-	slisten();
-}
-
-SocketHandler::SocketHandler(int port, int nqueue): port(port), nqueue(nqueue) {
+SocketHandler::SocketHandler(Config &config): config(config) {
+	this->port = 8080;
+	this->nqueue = 8;
 	// Create a socket
 	screate();
 	// Set Options to the socket

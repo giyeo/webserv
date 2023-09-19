@@ -1,5 +1,5 @@
-#ifndef SOCKET_HPP
-#define SOCKET_HPP
+#ifndef SOCKETHANDLER_HPP
+#define SOCKETHANDLER_HPP
 
 #include <iostream>
 #include <cstring>
@@ -9,11 +9,11 @@
 #include <netinet/in.h>
 #include <cerrno>
 #include <cstdio>
+#include "Configuration.hpp"
 
 class SocketHandler {
 	public:
-		SocketHandler();
-		SocketHandler(int port, int nqueue);
+		SocketHandler(Config &config);
 		~SocketHandler();
 
 		void	screate();
@@ -23,9 +23,10 @@ class SocketHandler {
 		int		getFd();
 	private:
 		int fd;
-		int port = 8080;
+		int port;
 		//N connection requests will be queued before further requests are refused
-		int nqueue = 8;
+		int nqueue;
+		Config &config;
 };
 
 #endif

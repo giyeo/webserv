@@ -7,6 +7,7 @@
 #include <cerrno>
 #include <cstdio>
 #include "SocketHandler.hpp"
+#include "Configuration.hpp"
 
 void handle_request(int server_socket) {
 	while (true) {
@@ -62,9 +63,13 @@ void handle_request(int server_socket) {
 }
 
 int main(int argc, char **argv) {
-	(void)argc;
-	(void)argv;
-	SocketHandler server_socket;
+	if(argc != 2) {
+		std::cout << "Must have one argument only, example: ./server webserv.conf\n";
+		exit(EXIT_FAILURE);
+	}
+	
+	Configuration server_config(argv[1]);
+	SocketHandler server_socket(server_config.getConfig());
 	// Handle accept incoming requests
 	handle_request(server_socket.getFd());
 	return 0;
