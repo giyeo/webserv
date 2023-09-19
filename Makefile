@@ -5,7 +5,7 @@ CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++98
 
 # Source files and output executable
-SRCS = main.cpp
+SRCS = main.cpp socketHandler.cpp
 TARGET = server
 
 all: $(TARGET)

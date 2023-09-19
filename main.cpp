@@ -6,49 +6,7 @@
 #include <netinet/in.h>
 #include <cerrno>
 #include <cstdio>
-
-#define PORT 8080
-int socket_create() {
-	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_socket == -1) {
-		perror("Socket creation failed");
-		exit(EXIT_FAILURE);
-	}
-	return server_socket;
-}
-
-void socket_options(int server_socket) {
-	int opt = 1;
-	if (setsockopt(server_socket, SOL_SOCKET,
-				SO_REUSEADDR | SO_REUSEPORT, &opt,
-				sizeof(opt))) {
-		perror("setsockopt");
-		exit(EXIT_FAILURE);
-	}
-}
-
-void socket_bind(int server_socket) {
-	struct sockaddr_in server_addr;
-	memset(&server_addr, 0, sizeof(server_addr));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = INADDR_ANY; // Listen on all available network interfaces
-	server_addr.sin_port = htons(PORT);      // Port number (change as needed)
-
-	if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-		perror("Binding failed");
-		close(server_socket);
-		exit(EXIT_FAILURE);
-	}
-}
-
-void socket_listen(int server_socket) {
-	if (listen(server_socket, 5) == -1) {
-		perror("Listening failed");
-		close(server_socket);
-		exit(EXIT_FAILURE);
-	}
-	std::cout << "Server listening on port 8080..." << std::endl;
-}
+#include "SocketHandler.hpp"
 
 void handle_request(int server_socket) {
 	while (true) {
@@ -106,17 +64,8 @@ void handle_request(int server_socket) {
 int main(int argc, char **argv) {
 	(void)argc;
 	(void)argv;
-	// Create a socket
-	int server_socket = socket_create();
-	// Set Options to the socket
-	socket_options(server_socket);
-	// Bind the socket to a specific address and port
-	socket_bind(server_socket);
-	// Listen for incoming connections
-	socket_listen(server_socket);
+	SocketHandler server_socket;
 	// Handle accept incoming requests
-	handle_request(server_socket);
-	// Close the server socket
-	close(server_socket);
+	handle_request(server_socket.getFd());
 	return 0;
 }
