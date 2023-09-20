@@ -6,9 +6,10 @@
 #include <netinet/in.h>
 #include <cerrno>
 #include <cstdio>
-#include "SocketHandler.hpp"
-#include "Configuration.hpp"
-#include "Response.hpp"
+#include "Communication/SocketHandler.hpp"
+#include "Configuration/Configuration.hpp"
+#include "Response/Response.hpp"
+#include "Request/Request.hpp"
 
 void handle_request(int server_socket) {
 	while (true) {
@@ -27,9 +28,14 @@ void handle_request(int server_socket) {
 		if (bytes_received == -1) {
 			perror("Receiving data failed");
 		} else {
+
+			Request httpReq((const char *)&buffer);
+			std::cout << httpReq.getVerb() << " is the verb\n";
 			
-			// std::cout << buffer << "\r\n";
-			Response httpres(
+			//Process the Parsed Request and then, return the Response
+			//
+
+			Response httpRes(
 				/*http_version,status_code,status_text*/
 					"1.1","200","OK",
 				/*content_type*/	
@@ -52,9 +58,9 @@ void handle_request(int server_socket) {
 					"<html><body><h1>Hello, World!</h1></body></html>"
 			);
 
-			std::cout << httpres.toString() << "\n";
+			std::cout << httpRes.toString() << "\n";
 			
-			int bytesSent = send(client_socket, httpres.toString().c_str(), httpres.toString().size(), 0);
+			int bytesSent = send(client_socket, httpRes.toString().c_str(), httpRes.toString().size(), 0);
 			if (bytesSent < 0) {
 				std::cerr << "Error sending response to client" << std::endl;
 			}

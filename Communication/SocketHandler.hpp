@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <cerrno>
 #include <cstdio>
-#include "Configuration.hpp"
+#include "../Configuration/Configuration.hpp"
 
 class SocketHandler {
 	public:

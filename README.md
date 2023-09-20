@@ -10,7 +10,10 @@ Handle Req and Res accordingly to RFC.
 - Deal with GET and Path (how to deal with resources)
 - Stream data mechanism to deliver data to the client (Text, documents, video, etc).
 
-
+# webserv execution order
+Configuration -> Communication ->
+start -> Request -> Resource Processing ->
+Response -> Repeat start;
 
 
 Client Request Header Example:
