@@ -30,9 +30,26 @@ void handle_request(int server_socket) {
 			
 			// std::cout << buffer << "\r\n";
 			Response httpres(
-				"1.1","200","OK",
-				"text/html", "", "","","","","","close",
-				"<html><body><h1>Hello, World!</h1></body></html>"
+				/*http_version,status_code,status_text*/
+					"1.1","200","OK",
+				/*content_type*/	
+					"text/html",
+				/*content_length*/
+					"48",
+				/*date*/
+					"2023-09-20T00:31:02.612Z",
+				/*server*/
+					"webserv",
+				/*cache_control*/
+					"",
+				/*set_cookie*/
+					"",
+				/*location*/
+					"",
+				/*connection*/
+					"close",
+				/*response_body*/
+					"<html><body><h1>Hello, World!</h1></body></html>"
 			);
 
 			std::cout << httpres.toString() << "\n";
@@ -42,7 +59,6 @@ void handle_request(int server_socket) {
 				std::cerr << "Error sending response to client" << std::endl;
 			}
 		}
-		
 		// Close the client socket
 		close(client_socket);
 	}
@@ -57,6 +73,6 @@ int main(int argc, char **argv) {
 	Configuration server_config(argv[1]);
 	SocketHandler server_socket(server_config.getConfig());
 	// Handle accept incoming requests
-	handle_request(server_socket.getFd());
-	return 0;
+	handle_request(server_socket.getFd()); //we are going to send the server_config as well, later..
+	return (0);
 }

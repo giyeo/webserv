@@ -36,15 +36,16 @@ std::string Response::toString() {
 	.append(res.status_code).append(" ")
 	.append(res.status_text).append("\n")
 	//Headers
-	.append("Content-Type: ").append(res.content_type).append("\n")
-	.append("Content-Length: ").append(res.content_length).append("\n")
-	.append("Date: ").append(res.date).append("\n")
-	.append("Server: ").append(res.server).append("\n")
-	.append("Cache-Control: ").append(res.cache_control).append("\n")
-	.append("Set-Cookie: ").append(res.set_cookie).append("\n")
-	.append("Location: ").append(res.location).append("\n")
-	.append("Connection: ").append(res.connection).append("\n")
+	.append((!res.content_type.empty()) ? std::string("Content-Type: ").append(res.content_type).append("\n") : "")
+	.append((!res.content_length.empty()) ? std::string("Content-Length: ").append(res.content_length).append("\n") : "")
+	.append((!res.date.empty()) ? std::string("Date: ").append(res.date).append("\n") : "")
+	.append((!res.server.empty()) ? std::string("Server: ").append(res.server).append("\n") : "")
+	.append((!res.cache_control.empty()) ? std::string("Cache-Control: ").append(res.cache_control).append("\n") : "")
+	.append((!res.set_cookie.empty()) ? std::string("Set-Cookie: ").append(res.set_cookie).append("\n") : "")
+	.append((!res.location.empty()) ? std::string("Location: ").append(res.location).append("\n") : "")
+	.append((!res.connection.empty()) ? std::string("Connection: ").append(res.connection).append("\n") : "")
 	//Reponse Body (HTML, JSON, XML, text, binary data, or any other format.)
-	.append("\n").append(res.response_body);
+	.append("\n")
+	.append((!res.response_body.empty()) ? res.response_body.append("\n") : "");
 	return response;
 }
