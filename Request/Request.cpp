@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
 Request::Request(const char *recv) {
-	this->revc = recv;
+	this->recv = recv;
 	request_parser();
 }
 

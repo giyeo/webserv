@@ -5,11 +5,11 @@
 
 class Request { 
 	public:
-		Request(const char *revc);
+		Request(const char *recv);
 		void request_parser();
 		std::string getVerb() const;
 	private:
-		const char *revc;
+		const char *recv;
 		std::string verb;
 		std::string resource;
 		std::string version;
