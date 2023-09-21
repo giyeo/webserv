@@ -15,6 +15,7 @@ Configuration -> Communication ->
 start -> Request -> Resource Processing ->
 Response -> Repeat start;
 
+# how fcntl is usefull
 
 Client Request Header Example:
 GET / HTTP/1.1
