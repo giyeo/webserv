@@ -39,4 +39,16 @@ Accept-Language: pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
 parsing conf files, there are 2 options, ints and string.
 each configuration will be one of those, in case of int, the parse to int should be a success.
 there will be an array "configuration that are integers" {"port", "nqueue", ...}, those should
-parse the conf file with success.
+parse the conf file with success
+
+
+
+# epoll analogy
+analogia do epoll como se fosse um restaurante.
+
+cozinha, garçon, cliente e atendente.
+
+atendente da as mesas (conexões), as mesas tem seu número (fd).
+o garçon (epoll), sabe quando o cliente quer algo.
+o cliente faz um request para o garçon (epoll) que avisa a cozinha(processamento de recursos)
+o processamento de recursos executa o pedido, e entrega para o cliente.

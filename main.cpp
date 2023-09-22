@@ -11,6 +11,7 @@
 #include "Response/Response.hpp"
 #include "Request/Request.hpp"
 #include <sys/epoll.h>
+#include <fcntl.h>
 
 #define MAX_EVENTS 10
 
@@ -37,6 +38,18 @@ int create_epoll(int server_socket) {
 void handle_request(int server_socket) {
 	int epollFd;
 	epoll_event events[MAX_EVENTS];
+
+	int flags = fcntl(server_socket, F_GETFL, 0);
+	if (flags == -1) {
+		std::cerr << "Error getting socket flags: " << strerror(errno) << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	if (fcntl(server_socket, F_SETFL, flags | O_NONBLOCK) == -1) {
+		std::cerr << "Error setting socket to non-blocking mode: " << strerror(errno) << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
 	epollFd = create_epoll(server_socket);
 
 	while (true) {
