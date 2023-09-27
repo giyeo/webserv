@@ -39,16 +39,16 @@ void handle_request(int server_socket) {
 	int epollFd;
 	epoll_event events[MAX_EVENTS];
 
-	int flags = fcntl(server_socket, F_GETFL, 0);
-	if (flags == -1) {
-		std::cerr << "Error getting socket flags: " << strerror(errno) << std::endl;
-		exit(EXIT_FAILURE);
-	}
+	// int flags = fcntl(server_socket, F_GETFL, 0);
+	// if (flags == -1) {
+	// 	std::cerr << "Error getting socket flags: " << strerror(errno) << std::endl;
+	// 	exit(EXIT_FAILURE);
+	// }
 
-	if (fcntl(server_socket, F_SETFL, flags | O_NONBLOCK) == -1) {
-		std::cerr << "Error setting socket to non-blocking mode: " << strerror(errno) << std::endl;
-		exit(EXIT_FAILURE);
-	}
+	// if (fcntl(server_socket, F_SETFL, flags | O_NONBLOCK) == -1) {
+	// 	std::cerr << "Error setting socket to non-blocking mode: " << strerror(errno) << std::endl;
+	// 	exit(EXIT_FAILURE);
+	// }
 
 	epollFd = create_epoll(server_socket);
 
@@ -71,8 +71,8 @@ void handle_request(int server_socket) {
 					perror("Accepting connection failed");
 					continue; // Handle the error and continue accepting connections
 				}
-
-				event.events = EPOLLIN;
+				
+                event.events = EPOLLIN;
                 event.data.fd = client_socket;
                 if (epoll_ctl(epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1) {
                     perror("epoll_ctl failed");
@@ -91,7 +91,7 @@ void handle_request(int server_socket) {
 					buffer[bytes_received] = '\0';
 
 					Request httpReq((const char *)&buffer);
-					std::cout << httpReq.getVerb() << " is the verb\n";
+					httpReq.getVerb();
 					
 					//Process the Parsed Request and then, return the Response
 					//
@@ -118,7 +118,7 @@ void handle_request(int server_socket) {
 							"<html><body><h1>Hello, World!</h1></body></html>"
 					);
 
-					std::cout << httpRes.toString() << "\n";
+					// std::cout << httpRes.toString() << "\n";
 					
 					int bytesSent = send(events[i].data.fd, httpRes.toString().c_str(), httpRes.toString().size(), 0);
 					if (bytesSent < 0) {

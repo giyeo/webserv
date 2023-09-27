@@ -2,12 +2,19 @@
 #define REQUEST_HPP
 
 #include <iostream>
+#include <string>
+#include <sstream>
+#include <stdlib.h>
+#include <cstring>
+#include <vector>
 
 class Request { 
 	public:
 		Request(const char *recv);
 		void request_parser();
+
 		std::string getVerb() const;
+        std::vector<std::string> splitLine(char *token) const;
 	private:
 		const char *recv;
 		std::string verb;
