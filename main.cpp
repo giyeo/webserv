@@ -84,7 +84,7 @@ void handle_request(int server_socket) {
 				char buffer[1024];
 				int bytes_received = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (bytes_received <= 0) {
-					perror("Receiving data failed");
+					// perror("Receiving data failed");
 					epoll_ctl(epollFd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
 					close(events[i].data.fd);
 				} else {

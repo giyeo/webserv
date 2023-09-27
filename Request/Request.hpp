@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <cstring>
 #include <vector>
+#include <map>
+#include <algorithm>
 
 class Request { 
 	public:
@@ -14,19 +16,14 @@ class Request {
 		void request_parser();
 
 		std::string getVerb() const;
-        std::vector<std::string> splitLine(char *token) const;
+		void store(std::vector<std::string> token);
+        std::vector<std::string> splitLine(std::string line) const;
+		void printRequest() const;
 	private:
 		const char *recv;
 		std::string verb;
-		std::string resource;
-		std::string version;
-		std::string request_url;
-		std::string host;
-		std::string user_agent;
-		std::string authorization;
-		std::string query_params;
-		std::string content_type;
-		std::string payload;
+		std::string path;
+		std::map<std::string, std::string> headers;
 };
 
 #endif
