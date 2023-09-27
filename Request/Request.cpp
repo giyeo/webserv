@@ -1,14 +1,13 @@
 #include "Request.hpp"
 
 Request::Request(const char *recv) {
-	this->recv = recv;
-	request_parser();
+	requestParser(recv);
 	printRequest();
 }
 
-void Request::request_parser() {
+void Request::requestParser(const char *recv) {
     std::string line;
-    std::istringstream iss(this->recv);
+    std::istringstream iss(recv);
     while (std::getline(iss, line)) {
         store(splitLine(line));
 	}

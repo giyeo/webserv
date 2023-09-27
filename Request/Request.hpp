@@ -13,14 +13,13 @@
 class Request { 
 	public:
 		Request(const char *recv);
-		void request_parser();
+		void requestParser(const char *recv);
 
 		std::string getVerb() const;
 		void store(std::vector<std::string> token);
         std::vector<std::string> splitLine(std::string line) const;
 		void printRequest() const;
 	private:
-		const char *recv;
 		std::string verb;
 		std::string path;
 		std::map<std::string, std::string> headers;
