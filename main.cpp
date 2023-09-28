@@ -12,6 +12,7 @@
 #include "Request/Request.hpp"
 #include <sys/epoll.h>
 #include <fcntl.h>
+#include "Resource/Resource.hpp"
 
 #define MAX_EVENTS 10
 
@@ -91,39 +92,9 @@ void handle_request(int server_socket) {
 					buffer[bytes_received] = '\0';
 
 					Request httpReq((const char *)&buffer);
-					httpReq.getVerb();
 					
-					//Process the Parsed Request and then, return the Response
-					//
-					Response httpRes(
-						/*http_version,status_code,status_text*/
-							"1.1","200","OK",
-						/*content_type*/	
-							"text/html",
-						/*content_length*/
-							"48",
-						/*date*/
-							"2023-09-20T00:31:02.612Z",
-						/*server*/
-							"webserv",
-						/*cache_control*/
-							"",
-						/*set_cookie*/
-							"",
-						/*location*/
-							"",
-						/*connection*/
-							"close",
-						/*response_body*/
-							"<html><body><h1>Hello, World!</h1></body></html>"
-					);
-
-					// std::cout << httpRes.toString() << "\n";
+					Resource resource(httpReq, events[i].data.fd);
 					
-					int bytesSent = send(events[i].data.fd, httpRes.toString().c_str(), httpRes.toString().size(), 0);
-					if (bytesSent < 0) {
-						std::cerr << "Error sending response to client" << std::endl;
-					}
 					sleep(2);
 				}
 			}

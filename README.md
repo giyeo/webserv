@@ -52,3 +52,6 @@ atendente da as mesas (conexões), as mesas tem seu número (fd).
 o garçon (epoll), sabe quando o cliente quer algo.
 o cliente faz um request para o garçon (epoll) que avisa a cozinha(processamento de recursos)
 o processamento de recursos executa o pedido, e entrega para o cliente.
+
+
+# send in chunks the response.

@@ -16,8 +16,9 @@ class Request {
 		void requestParser(const char *recv);
 
 		std::string getVerb() const;
+		std::string getPath() const;
 		void store(std::vector<std::string> token);
-        std::vector<std::string> splitLine(std::string line) const;
+		std::vector<std::string> splitLine(std::string line) const;
 		void printRequest() const;
 	private:
 		std::string verb;

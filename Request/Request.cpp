@@ -6,10 +6,10 @@ Request::Request(const char *recv) {
 }
 
 void Request::requestParser(const char *recv) {
-    std::string line;
-    std::istringstream iss(recv);
-    while (std::getline(iss, line)) {
-        store(splitLine(line));
+	std::string line;
+	std::istringstream iss(recv);
+	while (std::getline(iss, line)) {
+		store(splitLine(line));
 	}
 }
 
@@ -19,13 +19,13 @@ void Request::store(std::vector<std::string> token) {
 		return ;
 	std::vector<std::string> methods;
 	methods.push_back("GET");
-    methods.push_back("POST");
-    methods.push_back("DELETE");
+	methods.push_back("POST");
+	methods.push_back("DELETE");
 
-    if (this->verb.empty() && std::find(methods.begin(), methods.end(), token[0]) != methods.end()) {
-        this->verb = token[0];
+	if (this->verb.empty() && std::find(methods.begin(), methods.end(), token[0]) != methods.end()) {
+		this->verb = token[0];
 		this->path = token[1];
-    } else {
+	} else {
 		std::string key = token[0];
 		std::string value = token[1];
 		this->headers[key] = value;
@@ -34,25 +34,29 @@ void Request::store(std::vector<std::string> token) {
 
 std::vector<std::string> Request::splitLine(std::string line) const {
 	char *token = (char *)line.c_str();
-    std::vector<std::string> v;
+	std::vector<std::string> v;
 	if(line.length() == 1)
 		return v;
-    char *p = strtok(token, " ");
-    while (p != NULL) {
-        v.push_back(p);
-        p = strtok(NULL, " ");
-    }
-    return v;
+	char *p = strtok(token, " ");
+	while (p != NULL) {
+		v.push_back(p);
+		p = strtok(NULL, " ");
+	}
+	return v;
 }
 
 void Request::printRequest() const {
 	std::cout << "Method:"<< verb << "\n" << "Path:" << path << "\n";
 
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-        std::cout << it->first << it->second << std::endl;
-    }
+		std::cout << it->first << it->second << std::endl;
+	}
 }
 
 std::string Request::getVerb() const {
 	return this->verb;
+}
+
+std::string Request::getPath() const {
+	return this->path;
 }

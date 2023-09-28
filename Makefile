@@ -9,7 +9,8 @@ SRCS =	main.cpp \
 		Communication/SocketHandler.cpp \
 		Configuration/Configuration.cpp \
 		Response/Response.cpp \
-		Request/Request.cpp
+		Request/Request.cpp \
+		Resource/Resource.cpp
 TARGET = server
 
 all: $(TARGET)
