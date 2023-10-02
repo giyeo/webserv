@@ -123,6 +123,7 @@ void Resource::handleCGI(std::string filePath, Request &httpReq, int clientFd) {
 
 Resource::Resource(Request &httpReq, int clientFd) {
 	resourceToFileMapping["/"] = "index.html";
+	resourceToFileMapping["/index.html"] = "index.html";
 	resourceToFileMapping["/notFound"] = "notFound.html";
 	resourceToFileMapping["/test.py"] = "test.py";
 	std::string resourcePath = httpReq.getPath();

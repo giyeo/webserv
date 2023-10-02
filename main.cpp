@@ -79,7 +79,7 @@ void handle_request(int server_socket) {
 					
 					Resource resource(httpReq, events[i].data.fd);
 					
-					sleep(2);
+					// sleep(2); for test only
 				}
 			}
 		}
