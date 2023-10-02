@@ -2,7 +2,7 @@
 import cgi
 import cgitb
 import sys
-
+import os
 # Enable detailed error messages for debugging (remove in production)
 cgitb.enable()
 
@@ -10,8 +10,7 @@ cgitb.enable()
 # print("Content-type: text/html\n")
 
 # Get the request method (GET or POST)
-#TODO this is not should be hard coded
-request_method = sys.argv[1]
+request_method = os.environ.get("REQUEST_METHOD")
 
 # Parse the query parameters for GET requests
 if request_method == "GET":

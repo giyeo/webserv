@@ -72,15 +72,12 @@ bool Resource::ft_find(std::string str, std::string to_find) {
 }
 
 void Resource::handleCGI(std::string filePath, Request &httpReq, int clientFd) {
-	std::string fullPath = "/home/du_cadete/42/webserv/_Files/" + filePath;
+	std::string fullPath = "/home/giyeo/webserv/webserv/_Files/" + filePath;
 	std::string command = "python3 " + fullPath;	
 	std::stringstream ss;
 	
-	// std::string query = httpReq.getQuery();
-	std::string query = "GET";
-	if (query != "")
-		command += " " + query;
-	std::cout << command << std::endl;
+	setenv("REQUEST_METHOD", "GET", 1);
+	
 	FILE *fp = popen(command.c_str(), "r");
 	if (fp == NULL) {
 		std::cerr << "Error opening pipe" << std::endl;
