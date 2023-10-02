@@ -65,14 +65,77 @@ void serveFile(std::string filePath, int clientFd) {
 	}
 }
 
+bool Resource::ft_find(std::string str, std::string to_find) {
+    if (str.find(to_find) != std::string::npos)
+        return true;
+    return false;
+}
+
+void Resource::handleCGI(std::string filePath, Request &httpReq, int clientFd) {
+	std::string fullPath = "/home/du_cadete/42/webserv/_Files/" + filePath;
+	std::string command = "python3 " + fullPath;	
+	std::stringstream ss;
+	
+	// std::string query = httpReq.getQuery();
+	std::string query = "GET";
+	if (query != "")
+		command += " " + query;
+	std::cout << command << std::endl;
+	FILE *fp = popen(command.c_str(), "r");
+	if (fp == NULL) {
+		std::cerr << "Error opening pipe" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	char buffer[1024];
+	std::string res;
+	while (fgets(buffer, 1024, fp) != NULL) {
+		res += buffer;
+	}
+	pclose(fp);
+	// std::cout << res << std::endl;
+    ss << res.length();
+    std::string contentLength = ss.str();
+	Response httpRes(
+		/*http_version,status_code,status_text*/
+			"1.1","200","OK",
+		/*content_type*/	
+			"text/html",
+		/*content_length*/
+			contentLength,
+		/*date*/
+			"2023-09-20T00:31:02.612Z",
+		/*server*/
+			"webserv",
+		/*cache_control*/
+			"",
+		/*set_cookie*/
+			"",
+		/*location*/
+			"",
+		/*connection*/
+			"close",
+		/*response_body*/
+			res
+	);
+	std::cout << httpRes.toString() << "\n";
+	int bytesSent = send(clientFd, httpRes.toString().c_str(), httpRes.toString().size(), 0);
+	if (bytesSent < 0) {
+		std::cerr << "Error sending response to client" << std::endl;
+	}
+}
+
 Resource::Resource(Request &httpReq, int clientFd) {
 	resourceToFileMapping["/"] = "index.html";
 	resourceToFileMapping["/notFound"] = "notFound.html";
+	resourceToFileMapping["/test.py"] = "test.py";
 	std::string resourcePath = httpReq.getPath();
 
 	if (resourceToFileMapping.find(resourcePath) != resourceToFileMapping.end()) {
 		std::string filePath = resourceToFileMapping[resourcePath];
-		serveFile(filePath, clientFd);
+        if (ft_find(filePath, ".py"))
+            handleCGI(filePath, httpReq, clientFd);
+        else
+		    serveFile(filePath, clientFd);
 	} else {
 		serveFile("notFound.html", clientFd);
 	}
