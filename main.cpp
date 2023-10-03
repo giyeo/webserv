@@ -23,18 +23,6 @@ int create_epoll(int server_socket) {
 void handle_request(int server_socket) {
 	int epollFd;
 	epoll_event events[MAX_EVENTS];
-
-	// int flags = fcntl(server_socket, F_GETFL, 0);
-	// if (flags == -1) {
-	// 	std::cerr << "Error getting socket flags: " << strerror(errno) << std::endl;
-	// 	exit(EXIT_FAILURE);
-	// }
-
-	// if (fcntl(server_socket, F_SETFL, flags | O_NONBLOCK) == -1) {
-	// 	std::cerr << "Error setting socket to non-blocking mode: " << strerror(errno) << std::endl;
-	// 	exit(EXIT_FAILURE);
-	// }
-
 	epollFd = create_epoll(server_socket);
 
 	while (true) {
@@ -57,29 +45,42 @@ void handle_request(int server_socket) {
 					continue; // Handle the error and continue accepting connections
 				}
 				
-                event.events = EPOLLIN;
+				struct timeval timeout;
+                timeout.tv_sec = 1; // 30 seconds timeout
+                timeout.tv_usec = 0;
+
+                if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+                    perror("Error setting socket timeout");
+                    // Handle the error
+                }
+
+				fcntl(client_socket, F_SETFL, O_NONBLOCK);
+				
+                event.events = EPOLLIN | EPOLLET;
                 event.data.fd = client_socket;
                 if (epoll_ctl(epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1) {
                     perror("epoll_ctl failed");
                     close(client_socket);
                 }
+			
 			}
 			// Communication with the client
 			else {
 				char buffer[1024];
 				int bytes_received = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (bytes_received <= 0) {
-					// perror("Receiving data failed");
+					std::cout << bytes_received << "\n";
+					if(errno == EAGAIN || errno == EWOULDBLOCK)
+						std::cout << "HANGING\n";
 					epoll_ctl(epollFd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
 					close(events[i].data.fd);
+
 				} else {
 					buffer[bytes_received] = '\0';
-
 					Request httpReq((const char *)&buffer);
-					
 					Resource resource(httpReq, events[i].data.fd);
-					
-					// sleep(2); for test only
+					 //for test only
+					 sleep(2);
 				}
 			}
 		}

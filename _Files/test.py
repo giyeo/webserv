@@ -67,10 +67,8 @@ html_response = """<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to the Fancy Page</h1>
+        <h1>Welcome to CGI Script Page</h1>
         <p>This is a simple HTML response with some fancy CSS styling.</p>
-        <p>You can add more content and style it as needed.</p>
-        <a href="#" class="button">Click Me</a>
     </div>
 </body>
 </html>"""

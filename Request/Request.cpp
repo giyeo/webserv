@@ -2,7 +2,7 @@
 
 Request::Request(const char *recv) {
 	requestParser(recv);
-	printRequest();
+	// printRequest();
 }
 
 void Request::requestParser(const char *recv) {

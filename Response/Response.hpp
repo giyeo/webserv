@@ -2,6 +2,8 @@
 #define RESPONSE_HPP
 
 #include <iostream>
+#include <sys/socket.h>
+#include <unistd.h>
 
 typedef struct {
 	//Status Line
@@ -23,21 +25,9 @@ typedef struct {
 
 class Response {
 	public:
-		Response(
-			std::string http_version,
-			std::string status_code,
-			std::string status_text,
-			std::string content_type,
-			std::string content_length,
-			std::string date,
-			std::string server,
-			std::string cache_control,
-			std::string set_cookie,
-			std::string location,
-			std::string connection,
-			std::string response_body
-		);
+		Response(response_object &res);
 		std::string toString();
+		void sendResponse(int clientFd);
 	private:
 		response_object res;
 };
