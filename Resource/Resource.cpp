@@ -110,7 +110,7 @@ std::string Resource::itos(int num) const {
 
 std::string Resource::readFile(std::string filePath) const {
 	// Create an input file stream
-	std::string fullPath = "/home/giyeo/webserv/webserv/_Files/" + filePath;
+	std::string fullPath = "./_Files/" + filePath;
 	std::ifstream inputFile(fullPath.c_str(), std::ifstream::in);
 
     // Check if the file was successfully opened

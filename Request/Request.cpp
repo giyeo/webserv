@@ -1,12 +1,12 @@
 #include "Request.hpp"
 
 Request::Request(const char *recv) {
-	std::cout << "STARTING REQUEST PARSER\n";
-	// std::cout << recv << "\n";
+
+	std::cout << "---------------\n"<< recv << "\n---------------\n";
 	requestParser(recv);
 	pathVariables = parsePathVariables(path);
 	path = parsePath(path);
-	printRequest();
+	// printRequest();
 }
 
 void Request::requestParser(const char *recv) {
@@ -15,7 +15,6 @@ void Request::requestParser(const char *recv) {
 	while (std::getline(iss, line)) {
 		store(splitLine(line), line);
 	}
-	std::cout << "END REQUEST PARTSER\n";
 }
 
 void Request::store(std::vector<std::string> token, std::string line) {
@@ -39,7 +38,7 @@ void Request::store(std::vector<std::string> token, std::string line) {
 		std::string key = token[0];
 		std::string value = token[1];
 		this->headers[key] = value;
-		std::cout << isRequestBody << key << value << "\n";
+		// std::cout << isRequestBody << key << value << "\n";
 	} else {
 		std::cout << isRequestBody << line << "\n";
 	}

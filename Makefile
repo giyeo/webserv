@@ -11,11 +11,25 @@ SRCS =	main.cpp \
 		Response/Response.cpp \
 		Request/Request.cpp \
 		Resource/Resource.cpp
+
+TEST_SRCS =	test.cpp \
+		Communication/SocketHandler.cpp \
+		Configuration/Configuration.cpp \
+		Response/Response.cpp \
+		Request/Request.cpp \
+		Resource/Resource.cpp
+
 TARGET = server
+TEST = test
 
 all: $(TARGET)
 
 $(TARGET): $(SRCS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+test: $(TEST)
+
+$(TEST): $(TEST_SRCS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 clean:
