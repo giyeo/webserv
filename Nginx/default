@@ -1,0 +1,28 @@
+server {
+    listen 81;  # Listen on port 81
+
+    server_name localhost;  # Replace with your server's domain name or IP address
+
+    location / {
+        root /var/www;  # Root directory for static files
+        index index.html index.htm;
+    }
+
+    location /cgi-bin/ {
+        alias /var/www/cgi-bin/;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass unix:/run/fcgiwrap.socket;
+        fastcgi_index index.py;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~ \.py$ {
+        try_files $uri @python_cgi;
+    }
+
+    location @python_cgi {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass unix:/run/fcgiwrap.socket;
+        fastcgi_param SCRIPT_FILENAME $document_root/cgi-bin$fastcgi_script_name;
+    }
+}

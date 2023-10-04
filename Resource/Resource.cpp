@@ -53,19 +53,44 @@ void Resource::handleCGI(std::string filePath, Request &httpReq, int clientFd) {
 	httpRes.sendResponse(clientFd);
 }
 
+void Resource::uploadFile(Request &httpReq, int clientFd) {
+	httpReq.getHeaderValue("");
+	response_object resp;
+	std::string fileContent = "nice";
+
+	resp.http_version = "1.1";
+	resp.status_code = "200";
+	resp.status_text = "OK";
+	resp.content_type = "text/html";
+	resp.content_length = itos(fileContent.length());
+	resp.date = "2023-09-20T00:31:02.612Z";
+	resp.server = "webserv";
+	resp.connection = "close";
+	resp.response_body = fileContent;
+
+	Response httpRes(resp);
+	httpRes.sendResponse(clientFd);
+}
+
 Resource::Resource(Request &httpReq, int clientFd) {
 	resourceToFileMapping["/"] = "index.html";
 	resourceToFileMapping["/index.html"] = "index.html";
 	resourceToFileMapping["/notFound"] = "notFound.html";
 	resourceToFileMapping["/test.py"] = "test.py";
+	resourceToFileMapping["/files"] = "files.html";
+
 	std::string resourcePath = httpReq.getPath();
+	std::string method = httpReq.getMethod();
+	std::map<std::string, std::string> pathVariables = httpReq.getPathVariables();
 
 	if (resourceToFileMapping.find(resourcePath) != resourceToFileMapping.end()) {
 		std::string filePath = resourceToFileMapping[resourcePath];
-        if (ft_find(filePath, ".py"))
-            handleCGI(filePath, httpReq, clientFd);
-        else
-		    serveFile(filePath, clientFd);
+		if (ft_find(filePath, ".py"))
+			handleCGI(filePath, httpReq, clientFd);
+		else if (method == "GET")
+			serveFile(filePath, clientFd);
+		else if (method == "POST")
+			uploadFile(httpReq, clientFd);
 	} else {
 		serveFile("notFound.html", clientFd);
 	}

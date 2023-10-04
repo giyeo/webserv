@@ -66,7 +66,7 @@ void handle_request(int server_socket) {
 			}
 			// Communication with the client
 			else {
-				char buffer[1024];
+				char buffer[65536];
 				int bytes_received = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
 				if (bytes_received <= 0) {
 					std::cout << bytes_received << "\n";

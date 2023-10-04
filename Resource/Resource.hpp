@@ -19,6 +19,7 @@ class Resource {
 		void serveFile(std::string filePath, int clientFd) const;
         bool ft_find(std::string str, std::string to_find) const;
         void handleCGI(std::string filePath, Request &httpReq, int clientFd);
+		void uploadFile(Request &httpReq, int clientFd);
 };
 
 #endif

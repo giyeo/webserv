@@ -15,14 +15,22 @@ class Request {
 		Request(const char *recv);
 		void requestParser(const char *recv);
 
-		std::string getVerb() const;
+		std::string getMethod() const;
 		std::string getPath() const;
-		void store(std::vector<std::string> token);
+		std::map<std::string, std::string> getPathVariables() const;
+		std::map<std::string, std::string> getHeaders() const;
+
+		void printMap(std::map<std::string, std::string> map) const;
+		void store(std::vector<std::string> token, std::string line);
 		std::vector<std::string> splitLine(std::string line) const;
 		void printRequest() const;
+		std::string getHeaderValue(std::string headerName) const;
+		std::map<std::string, std::string> parsePathVariables(std::string fullPath) const;
+		std::string parsePath(std::string fullPath) const;
 	private:
-		std::string verb;
+		std::string method;
 		std::string path;
+		std::map<std::string, std::string> pathVariables;
 		std::map<std::string, std::string> headers;
 };
 

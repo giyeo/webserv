@@ -3,20 +3,22 @@
 Response::Response(response_object &res): res(res) {}
 
 void Response::sendResponse(int clientFd) {
-	const char *buffer = toString().c_str();
-	int size = toString().size();
+    std::string responseString = toString();
+    const char* buffer = responseString.c_str();
+    int size = responseString.size();
 
-	int totalSent = 0;
-	while(totalSent < size) {
-		int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
-		if (bytesSent < 0) {
-			std::cerr << "Error sending response to client" << std::endl;
-			break;
-		}
-		totalSent += bytesSent;
-	}
-	close(clientFd);
+    int totalSent = 0;
+    while (totalSent < size) {
+        int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
+        if (bytesSent < 0) {
+            std::cerr << "Error sending response to client" << std::endl;
+            break;
+        }
+        totalSent += bytesSent;
+    }
+    close(clientFd);
 }
+
 
 std::string Response::toString() {
 	std::string response = "";
