@@ -97,8 +97,7 @@ std::string Request::getHeaderValue(std::string headerName) const {
 
 std::map<std::string, std::string> Request::parsePathVariables(std::string fullPath) const {
     std::map<std::string, std::string> res;
-    size_t pos = 2; // Start at position 2 to skip "/?"
-
+    size_t pos = fullPath.find("?") + 1;
     while (pos != fullPath.npos) {
         size_t next = fullPath.find('&', pos); // Find the next '&'
         std::string param;

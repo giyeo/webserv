@@ -1,3 +1,6 @@
+make test && ./test
+make && ./server
+
 # TODO
 PARSING CONF FILE
 - key values to some class

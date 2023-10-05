@@ -14,8 +14,19 @@ void simpleGetParserTest() {
     assert(req.getPath() == "/index.html");
 }
 
+void getWithPathVariables() {
+    std::string file = readFile("getWithPathVariables");
+    assert(!file.empty());
+    Request req(file.c_str());
+    assert(req.getMethod() == "GET");
+    assert(req.getPath() == "/index.html");
+    assert(!req.getPathVariables()["name"].compare("caio"));
+    assert(!req.getPathVariables()["age"].compare("40"));
+}
+
 int main() {
     simpleGetParserTest();
+    getWithPathVariables();
     std::cout << "all tests passed\n";
 }
 
