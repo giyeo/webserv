@@ -8,7 +8,7 @@
 typedef std::string (*FunctionPointer)();
 
 std::string readFile(std::string filePath);
-
+//Maybe create my own assert that uses __LINE__ to get the line number.
 std::string simpleGetParserTest() {
     std::string file = readFile(__FUNCTION__);
     assert(!file.empty());
@@ -39,10 +39,24 @@ std::string getWithSomeHeaders() {
     assert(!req.getHeaders()["Content-Type"].compare("text for test"));
     return __FUNCTION__;
 }
+//may be useless
+std::string postWithFormData() {
+    std::string file = readFile(__FUNCTION__);
+    assert(!file.empty());
+    Request req(file.c_str());
+    assert(req.getMethod() == "POST");
+    assert(req.getPath() == "/index.html");
+    assert(!req.getFormDataBoundary().compare("X-INSOMNIA-BOUNDARY"));
+    return __FUNCTION__;
+}
 
 int main() {
     FunctionPointer f[] = {
-        simpleGetParserTest, getWithPathVariables, getWithSomeHeaders};
+        simpleGetParserTest,
+        getWithPathVariables,
+        getWithSomeHeaders,
+        postWithFormData
+    };
     
     for (unsigned long i = 0; i < sizeof(f) / sizeof(f[0]); ++i) {
         std::string funcName = f[i](); // Call the function at index i

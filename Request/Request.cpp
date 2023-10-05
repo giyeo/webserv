@@ -6,26 +6,56 @@ Request::Request(const char *recv) {
 	requestParser(recv);
 	pathVariables = parsePathVariables(path);
 	path = parsePath(path);
+	std::string contentType = headers["Content-Type"];
+	if(!contentType.empty() && contentType.find("boundary=") != contentType.npos)
+		formDataBoundary = contentType.substr(contentType.find("boundary=") + 9, contentType.npos);
 	// printRequest();
+}
+bool createFileFromBuffer(const std::string& filename, const char* buffer, std::size_t bufferSize);
+
+int stringToInt(const std::string& str) {
+    std::istringstream ss(str);
+    int number;
+    
+    // Use the stringstream to extract the integer
+    if (!(ss >> number)) {
+        // Handle the conversion error here, e.g., by returning a default value or throwing an exception
+        throw std::runtime_error("Failed to convert string to integer.");
+    }
+    
+    return number;
+}
+
+void count(const char *buffer) {
+	int i = 0;
+	while(buffer[i] != '\0') {
+		i++;
+	}
+	std::cout << i << "\n";
+	exit(1);
 }
 
 void Request::requestParser(const char *recv) {
 	std::string line;
 	std::istringstream iss(recv);
+	int nonBodySize = 0;
 	std::string fline = " ";
 	while (std::getline(iss, line)) {
-		store(splitLine(line,fline), line);
+		if(store(splitLine(line, fline)) == 1)
+			break;
+		nonBodySize += line.size();
 		fline = ":";
 	}
-	fline = " ";
+	// const char *requestBody =  recv + nonBodySize;
+	//request body case is post;
+	// count(requestBody);
+	// createFileFromBuffer("myfile.png", requestBody, stringToInt(headers["Content-Length"]));
 }
 
-void Request::store(std::vector<std::string> token, std::string line) {
+bool Request::store(std::vector<std::string> token) {
 
-	static bool isRequestBody = false;
 	if(token.empty() || token.size() == 0 || token[0].empty()) {
-		isRequestBody = true;
-		return ;
+		return true;
 	}
 
 	std::vector<std::string> methods;
@@ -36,15 +66,12 @@ void Request::store(std::vector<std::string> token, std::string line) {
 	if (this->method.empty() && std::find(methods.begin(), methods.end(), token[0]) != methods.end()) {
 		this->method = token[0];
 		this->path = token[1];
-		isRequestBody = false;
-	} else if (isRequestBody == false) {
+	} else {
 		std::string key = token[0];
 		std::string value = token[1];
 		this->headers[key] = value.substr(1, value.npos);
-		// std::cout << isRequestBody << key << value << "\n";
-	} else {
-		std::cout << isRequestBody << line << "\n";
 	}
+	return false;
 }
 
 std::vector<std::string> Request::splitLine(std::string line, std::string fline) const {
@@ -91,6 +118,10 @@ std::map<std::string, std::string> Request::getPathVariables() const {
 	return this->pathVariables;
 }
 
+std::string Request::getFormDataBoundary() const {
+	return this->formDataBoundary;
+}
+
 std::string Request::getHeaderValue(std::string headerName) const {
 	std::map<std::string, std::string>::const_iterator it = headers.find(headerName);
 	if (it != headers.end())
@@ -134,4 +165,29 @@ std::string Request::parsePath(std::string fullPath) const {
 	if(fullPath.find("?") == fullPath.npos)
 		return fullPath;
 	return fullPath.substr(0,fullPath.find("?"));
+}
+#include <fstream>
+bool createFileFromBuffer(const std::string& filename, const char* buffer, std::size_t bufferSize) {
+    // Open the file for writing
+    std::ofstream file(filename.c_str(), std::ios::binary);
+    
+    // Check if the file was opened successfully
+    if (!file) {
+        std::cerr << "Failed to create or open the file." << std::endl;
+        return false;
+    }
+
+    // Write the buffer content to the file
+    file.write(buffer, bufferSize);
+
+    // Check for write errors
+    if (!file) {
+        std::cerr << "Error occurred while writing to the file." << std::endl;
+        return false;
+    }
+
+    // Close the file
+    file.close();
+    
+    return true;
 }

@@ -17,11 +17,12 @@ class Request {
 
 		std::string getMethod() const;
 		std::string getPath() const;
+		std::string getFormDataBoundary() const;
 		std::map<std::string, std::string> getPathVariables() const;
 		std::map<std::string, std::string> getHeaders() const;
 
 		void printMap(std::map<std::string, std::string> map) const;
-		void store(std::vector<std::string> token, std::string line);
+		bool store(std::vector<std::string> token);
 		std::vector<std::string> splitLine(std::string line,std::string fline) const;
 		void printRequest() const;
 		std::string getHeaderValue(std::string headerName) const;
@@ -30,8 +31,10 @@ class Request {
 	private:
 		std::string method;
 		std::string path;
+		std::string formDataBoundary;
 		std::map<std::string, std::string> pathVariables;
 		std::map<std::string, std::string> headers;
+
 };
 
 #endif
