@@ -22,7 +22,7 @@ class Request {
 
 		void printMap(std::map<std::string, std::string> map) const;
 		void store(std::vector<std::string> token, std::string line);
-		std::vector<std::string> splitLine(std::string line) const;
+		std::vector<std::string> splitLine(std::string line,std::string fline) const;
 		void printRequest() const;
 		std::string getHeaderValue(std::string headerName) const;
 		std::map<std::string, std::string> parsePathVariables(std::string fullPath) const;

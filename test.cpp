@@ -3,31 +3,52 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#define GREEN "\033[1;32m"
+#define RESET "\033[0m"
+typedef std::string (*FunctionPointer)();
 
 std::string readFile(std::string filePath);
 
-void simpleGetParserTest() {
-    std::string file = readFile("simpleGetParserTest");
+std::string simpleGetParserTest() {
+    std::string file = readFile(__FUNCTION__);
     assert(!file.empty());
     Request req(file.c_str());
     assert(req.getMethod() == "GET");
     assert(req.getPath() == "/index.html");
+    return __FUNCTION__;
 }
 
-void getWithPathVariables() {
-    std::string file = readFile("getWithPathVariables");
+std::string getWithPathVariables() {
+    std::string file = readFile(__FUNCTION__);
     assert(!file.empty());
     Request req(file.c_str());
     assert(req.getMethod() == "GET");
     assert(req.getPath() == "/index.html");
     assert(!req.getPathVariables()["name"].compare("caio"));
     assert(!req.getPathVariables()["age"].compare("40"));
+    return __FUNCTION__;
+}
+
+std::string getWithSomeHeaders() {
+    std::string file = readFile(__FUNCTION__);
+    assert(!file.empty());
+    Request req(file.c_str());
+    assert(req.getMethod() == "GET");
+    assert(req.getPath() == "/index.html");
+    assert(!req.getHeaders()["Authorization"].compare("Bearer"));
+    assert(!req.getHeaders()["Content-Type"].compare("text for test"));
+    return __FUNCTION__;
 }
 
 int main() {
-    simpleGetParserTest();
-    getWithPathVariables();
-    std::cout << "all tests passed\n";
+    FunctionPointer f[] = {
+        simpleGetParserTest, getWithPathVariables, getWithSomeHeaders};
+    
+    for (unsigned long i = 0; i < sizeof(f) / sizeof(f[0]); ++i) {
+        std::string funcName = f[i](); // Call the function at index i
+        std::cout << GREEN << "✅ PASSED " << RESET << funcName << std::endl;
+    }
+    std::cout << "✅ All tests passed\n";
 }
 
 std::string readFile(std::string filePath) {

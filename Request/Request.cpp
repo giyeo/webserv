@@ -12,9 +12,12 @@ Request::Request(const char *recv) {
 void Request::requestParser(const char *recv) {
 	std::string line;
 	std::istringstream iss(recv);
+	std::string fline = " ";
 	while (std::getline(iss, line)) {
-		store(splitLine(line), line);
+		store(splitLine(line,fline), line);
+		fline = ":";
 	}
+	fline = " ";
 }
 
 void Request::store(std::vector<std::string> token, std::string line) {
@@ -37,22 +40,23 @@ void Request::store(std::vector<std::string> token, std::string line) {
 	} else if (isRequestBody == false) {
 		std::string key = token[0];
 		std::string value = token[1];
-		this->headers[key] = value;
+		this->headers[key] = value.substr(1, value.npos);
 		// std::cout << isRequestBody << key << value << "\n";
 	} else {
 		std::cout << isRequestBody << line << "\n";
 	}
 }
 
-std::vector<std::string> Request::splitLine(std::string line) const {
+std::vector<std::string> Request::splitLine(std::string line, std::string fline) const {
+
 	char *token = (char *)line.c_str();
 	std::vector<std::string> v;
 	if(line.length() == 1)
 		return v;
-	char *p = strtok(token, " ");
+	char *p = strtok(token, fline.c_str());
 	while (p != NULL) {
 		v.push_back(p);
-		p = strtok(NULL, " ");
+		p = strtok(NULL, fline.c_str());
 	}
 	return v;
 }
