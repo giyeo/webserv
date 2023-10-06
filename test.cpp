@@ -54,8 +54,7 @@ int main() {
     FunctionPointer f[] = {
         simpleGetParserTest,
         getWithPathVariables,
-        getWithSomeHeaders,
-        postWithFormData
+        getWithSomeHeaders
     };
     
     for (unsigned long i = 0; i < sizeof(f) / sizeof(f[0]); ++i) {

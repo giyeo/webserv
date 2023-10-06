@@ -80,7 +80,7 @@ void handle_request(int server_socket) {
 					Request httpReq((const char *)&buffer);
 					Resource resource(httpReq, events[i].data.fd);
 					 //for test only
-					 sleep(2);
+					//  sleep(2);
 				}
 			}
 		}

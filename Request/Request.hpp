@@ -22,16 +22,19 @@ class Request {
 		std::map<std::string, std::string> getHeaders() const;
 
 		void printMap(std::map<std::string, std::string> map) const;
-		bool store(std::vector<std::string> token);
+		bool parseHeaders(std::vector<std::string> token);
 		std::vector<std::string> splitLine(std::string line,std::string fline) const;
 		void printRequest() const;
 		std::string getHeaderValue(std::string headerName) const;
-		std::map<std::string, std::string> parsePathVariables(std::string fullPath) const;
+		std::map<std::string, std::string> parseQueryParameters(std::string fullPath) const;
 		std::string parsePath(std::string fullPath) const;
+
+		void parseRequestLine(std::vector<std::string> token);
 	private:
 		std::string method;
 		std::string path;
 		std::string formDataBoundary;
+		std::string contentType;
 		std::map<std::string, std::string> pathVariables;
 		std::map<std::string, std::string> headers;
 
