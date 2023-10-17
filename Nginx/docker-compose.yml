@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  nginx:
+    container_name: nginx
+    build: ./
+    ports:
+      - '81:81'
+    restart: on-failure
+    networks:
+      - compose-bridge
+
+networks:
+  compose-bridge:
+    driver: bridge

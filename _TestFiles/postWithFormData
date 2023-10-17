@@ -1,0 +1,12 @@
+POST /index.html HTTP/1.1
+Host: localhost:8080
+Content-Type: multipart/form-data; boundary=X-INSOMNIA-BOUNDARY
+User-Agent: insomnia/8.2.0
+Accept: */*
+Content-Length: 100
+
+--X-INSOMNIA-BOUNDARY
+Content-Disposition: form-data; name="asda"
+
+asd
+--X-INSOMNIA-BOUNDARY--

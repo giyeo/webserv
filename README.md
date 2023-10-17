@@ -1,3 +1,14 @@
+make test && ./test
+make && ./server
+-REQUEST LINE
+-HEADERS
+-REQUEST BODY
+# GET
+- parse path variables and header
+# POST
+- parse headers, path variables and request body
+# DELETE
+- parse path variables {}
 # TODO
 PARSING CONF FILE
 - key values to some class

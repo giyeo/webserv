@@ -1,32 +1,24 @@
 #include "Response.hpp"
 
-Response::Response(
-	std::string http_version,
-	std::string status_code,
-	std::string status_text,
-	std::string content_type,
-	std::string content_length,
-	std::string date,
-	std::string server,
-	std::string cache_control,
-	std::string set_cookie,
-	std::string location,
-	std::string connection,
-	std::string response_body
-) {
-	res.http_version = http_version;
-	res.status_code = status_code;
-	res.status_text = status_text;
-	res.content_type = content_type;
-	res.content_length = content_length;
-	res.date = date;
-	res.server = server;
-	res.cache_control = cache_control;
-	res.set_cookie = set_cookie;
-	res.location = location;
-	res.connection = connection;
-	res.response_body = response_body;
+Response::Response(response_object &res): res(res) {}
+
+void Response::sendResponse(int clientFd) {
+    std::string responseString = toString();
+    const char* buffer = responseString.c_str();
+    int size = responseString.size();
+
+    int totalSent = 0;
+    while (totalSent < size) {
+        int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
+        if (bytesSent < 0) {
+            std::cerr << "Error sending response to client" << std::endl;
+            break;
+        }
+        totalSent += bytesSent;
+    }
+    close(clientFd);
 }
+
 
 std::string Response::toString() {
 	std::string response = "";
