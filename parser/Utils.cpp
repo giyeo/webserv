@@ -22,8 +22,8 @@ bool contains(std::vector<std::string> vector, std::string target) {
 }
 
 std::string trimString(const std::string& str) {
-    size_t first = str.find_first_not_of(" \t\n\r{}"); // Find the first non-whitespace character
-    size_t last = str.find_last_not_of(" \t\n\r{}");   // Find the last non-whitespace character
+    size_t first = str.find_first_not_of(" \t\n\r"); // Find the first non-whitespace character
+    size_t last = str.find_last_not_of(" \t\n\r");   // Find the last non-whitespace character
 
     if (first == std::string::npos) {
         return "";

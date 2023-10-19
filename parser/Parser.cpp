@@ -4,7 +4,7 @@ typedef std::map<std::string, std::string> mapStr;
 Server parseEachDirective(mapStr myConf, mapStr locations) {
 	Server server;
 	std::map<std::string, std::string>::iterator it;
-	
+
 	for (it = myConf.begin(); it != myConf.end(); ++it)
 		server.dispatcher(it->first, trimString(it->second));
 	for (it = locations.begin(); it != locations.end(); ++it)
@@ -13,15 +13,13 @@ Server parseEachDirective(mapStr myConf, mapStr locations) {
 }
 
 Server parseServerDirectives(std::string input) {
+	std::vector<std::string> names = {"server_name", "listen", "root", "index", "error_page", "location", "client_max_body_size"};
 	std::map<std::string, std::string> myConf;
 	std::map<std::string, std::string> locations;
-	std::vector<std::string> locationContent = extractAndRemoveBracesContent(input);
-
 	std::string key;
 	std::string value;
-
-	std::vector<std::string> tokens = parseLine(input, ';');//has each line;
-	std::vector<std::string> names = {"server_name", "listen", "root", "index", "error_page", "location", "client_max_body_size"};
+	std::vector<std::string> locationContent = extractAndRemoveBracesContent(input);
+	std::vector<std::string> tokens = parseLine(input, ';');
 	
 	for (const std::string& str : tokens) {
 		std::vector<std::string> configuration = parseLine(str, ':');
@@ -39,7 +37,7 @@ Server parseServerDirectives(std::string input) {
 			error(__LINE__);
 		if(contains(names, key)) {
 			if(key.compare("location") == 0)
-				locations[value] = locationContent[locations.size()];
+				locations[trimString(value)] = locationContent[locations.size()];
 			else
 				myConf[key] = value;
 		}
