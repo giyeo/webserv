@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <regex>
 #include "Server.hpp"
+#include <fstream>
 
 typedef std::map<std::string, std::string> mapStr;
 
@@ -108,7 +109,6 @@ std::string trimString(const std::string& str) {
 
 Server parseDirectives(mapStr myConf, mapStr locations) {
 	Server server;
-
 	std::map<std::string, std::string>::iterator it;
 	for (it = myConf.begin(); it != myConf.end(); ++it) {
 		const std::string& key = it->first;
@@ -138,7 +138,6 @@ Server parseDirectives(mapStr myConf, mapStr locations) {
 }
 
 Server parserServerConf(std::string input) {
-	
 	std::map<std::string, std::string> myConf;
 	std::map<std::string, std::string> locations;
 	std::vector<std::string> locationContent = extractAndRemoveBracesContent(input);
@@ -148,13 +147,16 @@ Server parserServerConf(std::string input) {
 
 	std::vector<std::string> tokens = parseLine(input, ';');//has each line;
 	std::vector<std::string> names = {"server_name", "listen", "root", "index", "error_page", "location", "client_max_body_size"};
-	std::vector<std::string> locationNames = {"try_files", "root", "error_page", "fastcgi_pass"};
 	
 	for (const std::string& str : tokens) {
 		std::vector<std::string> configuration = parseLine(str, ':');
 		if(configuration.size() == 2) {
 			key = trimString(configuration[0]);
 			value = configuration[1];
+		}
+		else if(configuration.size() == 3 && trimString(configuration[0]).compare("listen") == 0) {
+			key = trimString(configuration[0]);
+			value = configuration[1] + ":" + configuration[2];
 		}
 		else if(configuration.size() == 1 && trimString(configuration[0]).empty())
 			continue;
@@ -169,32 +171,41 @@ Server parserServerConf(std::string input) {
 		else
 			error(__LINE__);
 	}
-	return parseDirectives(myConf, locations);;
+	return parseDirectives(myConf, locations);
+}
+
+std::string readFile(std::string filePath) {
+	// Create an input file stream
+	std::string fullPath = filePath;
+	std::ifstream inputFile(fullPath.c_str(), std::ifstream::in);
+
+    // Check if the file was successfully opened
+    if (!inputFile.is_open()) {
+        std::cerr << "Failed to open file: " << fullPath << std::endl;
+        return "";
+    }
+
+    // Read and print the content of the file line by line
+	std::string res;
+    std::string line;
+    while (std::getline(inputFile, line)) {
+		res += line;
+        res += "\n";
+    }
+
+    // Close the file
+    inputFile.close();
+	return res;
 }
 
 int main() {
 	// std::string input = "         server [server_name: myserv  ;listen: 114;]        server[server_name:a;]";
-	std::string input = "server [\
-		listen: 80;\
-		server_name: example.com www.example.com;\
-		\
-		root: /var/www/html;\
-		index: index.html;\
-		error_page: 404 /404.html;\
-		location: / {\
-			proxy_pass: http://backend-server; \
-			try_files: $uri $uri/ =404; \
-			}; \
-		location: /s {\
-			proxy_pass: http://backend-server; \
-			try_files: $uri $uri/ =404; \
-			}; \
-	]";
+	std::string input = readFile("default.conf");
 	std::vector<std::map<std::string, std::vector<std::string>>> fullConfiguration;
 	std::vector<std::string> parsedServers = parseServers(input);
 	std::vector<Server> servers;
 	
-	for(int i = 0; i < servers.size(); i++) {
+	for(int i = 0; i < parsedServers.size(); i++) {
 		// std::cout << servers[i] << "\n";
 		servers.push_back(parserServerConf(parsedServers[i]));
 		std::cout << "SUCCESS!\n";
