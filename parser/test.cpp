@@ -6,6 +6,7 @@
 #include <map>
 #include <algorithm>
 #include <regex>
+#include "Server.hpp"
 
 typedef std::map<std::string, std::string> mapStr;
 
@@ -105,47 +106,38 @@ std::string trimString(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
-void parseDirectives(mapStr myConf, mapStr locations) {
-	std::vector<std::map<std::string, std::vector<std::string>>> result;
-	std::map<std::string, std::vector<std::string>> temp;
+Server parseDirectives(mapStr myConf, mapStr locations) {
+	Server server;
 
 	std::map<std::string, std::string>::iterator it;
 	for (it = myConf.begin(); it != myConf.end(); ++it) {
 		const std::string& key = it->first;
 		const std::string& value = trimString(it->second);
-		// temp[key] = functionCall()
 
 		if(!key.compare("server_name"))
-			std::cout << value << "\n";
+			server.parseServerName(value);
 		if(!key.compare("listen"))
-			std::cout << value << "\n";
+			server.parseListen(value);
 		if(!key.compare("root"))
-			std::cout << value << "\n";
+			server.parseRoot(value);
 		if(!key.compare("index"))
-			std::cout << value << "\n";
+			server.parseIndex(value);
 		if(!key.compare("error_page"))
-			std::cout << value << "\n";
-		if(!key.compare("location"))
-			std::cout << value << "\n";
+			server.parseErrorPage(value);
 		if(!key.compare("client_max_body_size"))
-			std::cout << value << "\n";
-		//result.push_back(temp);
+			server.parseClientMaxBodySize(value);
 	}
 	for (it = locations.begin(); it != locations.end(); ++it) {
-		// temp[key] = functionCall()
 		std::vector<std::string> locationDirectives;
-
 		const std::string& key = it->first;
 		const std::string& value = trimString(it->second);
-		locationDirectives = parseLine(value, ';');
-		for(const auto &d: locationDirectives) {
-			std::cout << key << " " << trimString(d) << "\n";
-		}
-		//result.push_back(temp);
+
+		server.parseLocation(key, value);
 	}
+	return server;
 }
 
-std::map<std::string, std::string> parserServerConf(std::string input) {
+Server parserServerConf(std::string input) {
 	
 	std::map<std::string, std::string> myConf;
 	std::map<std::string, std::string> locations;
@@ -177,8 +169,7 @@ std::map<std::string, std::string> parserServerConf(std::string input) {
 		else
 			error(__LINE__);
 	}
-	parseDirectives(myConf, locations);
-	return myConf;
+	return parseDirectives(myConf, locations);;
 }
 
 int main() {
@@ -199,12 +190,13 @@ int main() {
 			try_files: $uri $uri/ =404; \
 			}; \
 	]";
+	std::vector<std::map<std::string, std::vector<std::string>>> fullConfiguration;
+	std::vector<std::string> parsedServers = parseServers(input);
+	std::vector<Server> servers;
 	
-	std::vector<std::string> servers = parseServers(input);
-	std::vector<std::map<std::string, std::string>> serversConf;
 	for(int i = 0; i < servers.size(); i++) {
 		// std::cout << servers[i] << "\n";
-		serversConf.push_back(parserServerConf(servers[i]));
+		servers.push_back(parserServerConf(parsedServers[i]));
 		std::cout << "SUCCESS!\n";
 	}
 }
