@@ -1,6 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "Utils.hpp"
 #include <string>
 #include <iostream>
 #include <stdlib.h>
@@ -27,7 +28,7 @@ class Server {
 		void parseLocation(std::string value);
 		void parseClientMaxBodySize(std::string value);
 		void parseLocation(std::string path, std::string value); //.pushback to locations vector
-
+		void dispatcher(std::string key, std::string value);
 		std::string serverName;
 		std::string listen;
 		std::string root;

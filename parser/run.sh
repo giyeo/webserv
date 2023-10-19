@@ -1,1 +1,1 @@
-g++ test.cpp Server.cpp && ./a.out
+g++ Parser.cpp Server.cpp Utils.cpp && ./a.out

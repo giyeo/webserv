@@ -40,3 +40,27 @@ void Server::parseLocation(std::string path, std::string value){
 	//ex: path: /dir/
 	//ex: value: try_files $uri $uri/ =404  try_files $uri $uri/ =404          
 }
+
+typedef void (Server::*MemberFunction)(std::string);
+
+void Server::dispatcher(std::string key, std::string value) {
+	std::vector<std::string> names = {"server_name", "listen", "root", "index", "error_page", "client_max_body_size"};
+	std::vector<MemberFunction> functionPointers;
+    functionPointers.push_back(&Server::parseServerName);
+    functionPointers.push_back(&Server::parseListen);
+    functionPointers.push_back(&Server::parseRoot);
+    functionPointers.push_back(&Server::parseIndex);
+    functionPointers.push_back(&Server::parseErrorPage);
+    functionPointers.push_back(&Server::parseClientMaxBodySize);
+	
+	if(names.size() != functionPointers.size()) {
+		std::cout << "diferent sizes in dispatcher\n";
+		return ;
+	}
+	
+	for(int i = 0; i < names.size(); i++) {
+		if(names[i].compare(key) == 0) {
+			(this->*functionPointers[i])(value);
+		}
+	}
+}
