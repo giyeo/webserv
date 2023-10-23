@@ -1,7 +1,7 @@
 #include "Utils.hpp"
 
-void error(int line) {
-	std::cout << "line:" << line << " Error\n";
+void error(int line, std::string des) {
+	std::cout << "Error! line:" << line << " " << des << "\n";
 	exit(1);
 }
 
@@ -53,13 +53,17 @@ std::vector<std::string> extractAndRemoveBracesContent(std::string& input) {
 }
 
 //Check if string has anything other than blank
-void allblank(size_t pivot, size_t location, std::string input) {
+bool allblank(size_t pivot, size_t location, std::string input, bool exit) {
 
 	while(pivot < location) {
-		if(input[pivot] != ' ' && input[pivot] != '\t' && input[pivot] != '\n' && input[pivot] != '\r') 
-			error(__LINE__);
+		if(input[pivot] != ' ' && input[pivot] != '\t' && input[pivot] != '\n' && input[pivot] != '\r') {
+			if(exit)
+				error(__LINE__, "unexpected token has been found");
+			return false;
+		}
 		pivot++;
 	}
+	return true;
 }
 
 std::string readFile(std::string filePath) {

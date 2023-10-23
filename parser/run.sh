@@ -1,1 +1,1 @@
-g++ Parser.cpp Server.cpp Utils.cpp && ./a.out
+g++ Parser.cpp Server.cpp Utils.cpp && ./a.out $1
