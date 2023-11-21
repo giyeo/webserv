@@ -2,6 +2,7 @@
 #define SERVER_HPP
 
 #include "Utils.hpp"
+#include <unistd.h>
 #include <string>
 #include <iostream>
 #include <stdlib.h>
@@ -9,7 +10,6 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
-#include <regex>
 
 typedef struct s_location {
 	std::string path;
@@ -29,7 +29,7 @@ class Server {
 		void parseClientMaxBodySize(std::string value);
 		void parseLocation(std::string path, std::string value); //.pushback to locations vector
 		void dispatcher(std::string key, std::string value);
-		std::string serverName;
+		std::vector<std::string> serverName;
 		std::string listen;
 		std::string root;
 		std::string index;

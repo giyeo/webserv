@@ -5,7 +5,7 @@ void error(int line, std::string des) {
 	exit(1);
 }
 
-std::vector<std::string> parseLine(std::string input, char delimiter) {
+std::vector<std::string> tokenizer(std::string input, char delimiter) {
 	std::vector<std::string> tokens;
 	std::istringstream tokenStream(input);
 	std::string token;
@@ -32,25 +32,25 @@ std::string trimString(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
-std::vector<std::string> extractAndRemoveBracesContent(std::string& input) {
-    std::vector<std::string> extractedContent;
-    std::regex pattern("\\{[^{}]*\\}");
+// std::vector<std::string> extractAndRemoveBracesContent(std::string& input) {
+//     std::vector<std::string> extractedContent;
+//     std::regex pattern("\\{[^{}]*\\}");
 
-    // Search for and iterate through all matches
-    std::sregex_iterator it(input.begin(), input.end(), pattern);
-    std::sregex_iterator end;
+//     // Search for and iterate through all matches
+//     std::sregex_iterator it(input.begin(), input.end(), pattern);
+//     std::sregex_iterator end;
 
-    while (it != end) {
-        std::smatch match = *it;
-        extractedContent.push_back(match.str()); // Add the matched content to the vector
-        it++;
-    }
+//     while (it != end) {
+//         std::smatch match = *it;
+//         extractedContent.push_back(match.str()); // Add the matched content to the vector
+//         it++;
+//     }
 
-    // Remove the matched content from the input string
-    input = std::regex_replace(input, pattern, "");
+//     // Remove the matched content from the input string
+//     input = std::regex_replace(input, pattern, "");
 
-    return extractedContent;
-}
+//     return extractedContent;
+// }
 
 //Check if string has anything other than blank
 bool allblank(size_t pivot, size_t location, std::string input, bool exit) {

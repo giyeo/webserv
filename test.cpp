@@ -3,9 +3,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "Utils.hpp"
 #define GREEN "\033[1;32m"
 #define RESET "\033[0m"
 typedef std::string (*FunctionPointer)();
+
+
 
 std::string readFile(std::string filePath);
 //Maybe create my own assert that uses __LINE__ to get the line number.

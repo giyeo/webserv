@@ -3,21 +3,25 @@
 Server::Server() {}
 Server::~Server() {}
 
+
 void Server::parseServerName(std::string value){
-	std::cout << value << "\n";
-	//ex: example.com
-	//ex: example.com www.example.com
+	std::vector<std::string> server_names = tokenizer(value, ' ');
+	this->serverName = server_names;
 }
 
 void Server::parseListen(std::string value){
-	std::cout << value << "\n";
-	//ex: 80 (int only)
-	//ex: 192.166.37.2:80 (int + . and :)
+	for(size_t i = 0; i < value.size(); i++) {
+		if(!isdigit(value[i]) && value[i] != '.' && value[i] != ':') {
+			throw std::invalid_argument("Invalid listen value");
+		}
+	}
+	this->listen = value;
 }
 
 void Server::parseRoot(std::string value){
-	std::cout << value << "\n";
-	//ex: /var/www/html
+	if (access(value.c_str(), R_OK) != 0)
+		throw std::invalid_argument("Invalid root value");
+	this->root = value;
 }
 
 void Server::parseIndex(std::string value){
@@ -44,7 +48,14 @@ void Server::parseLocation(std::string path, std::string value){
 typedef void (Server::*MemberFunction)(std::string);
 
 void Server::dispatcher(std::string key, std::string value) {
-	std::vector<std::string> names = {"server_name", "listen", "root", "index", "error_page", "client_max_body_size"};
+	std::vector<std::string> names;
+	names.push_back("server_name");
+	names.push_back("listen");
+	names.push_back("root");
+	names.push_back("index");
+	names.push_back("error_page");
+	names.push_back("client_max_body_size");
+
 	std::vector<MemberFunction> functionPointers;
     functionPointers.push_back(&Server::parseServerName);
     functionPointers.push_back(&Server::parseListen);
@@ -58,9 +69,15 @@ void Server::dispatcher(std::string key, std::string value) {
 		return ;
 	}
 	
-	for(int i = 0; i < names.size(); i++) {
-		if(names[i].compare(key) == 0) {
-			(this->*functionPointers[i])(value);
+	for(size_t i = 0; i < names.size(); i++) {
+		try {
+			if(names[i].compare(key) == 0) {
+				(this->*functionPointers[i])(value);
+			}
+		} catch (std::invalid_argument& e) {
+			std::cerr << e.what() << std::endl;
+		} catch (std::exception& e) {
+			std::cerr << e.what() << std::endl;
 		}
 	}
 }
