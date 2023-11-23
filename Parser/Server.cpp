@@ -19,19 +19,22 @@ void Server::parseListen(std::string value){
 }
 
 void Server::parseRoot(std::string value){
-	if (access(value.c_str(), R_OK) != 0)
-		throw std::invalid_argument("Invalid root value");
+	std::vector<std::string> tokens = tokenizer(value, ' ');
+	if(tokens.size() != 1)
+		throw std::invalid_argument("Invalid number of arguments in a \"root\" directive");
 	this->root = value;
 }
 
 void Server::parseIndex(std::string value){
-	std::cout << value << "\n";
-	//ex: index.html
+	this->index = value;
 }
 
+// In case of invalid error page, nginx behavior is redirect to a inexistent page.
+// I prefer throw an exception instead.
 void Server::parseErrorPage(std::string value){
-	std::cout << value << "\n";
-	//ex: 404 /404.html
+	if(access(value.c_str(), R_OK) != 0)
+		throw std::invalid_argument("Invalid error_page value");
+	this->errorPage = value;
 }
 
 void Server::parseClientMaxBodySize(std::string value){

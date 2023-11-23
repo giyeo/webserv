@@ -63,7 +63,34 @@ MU_TEST(test_parse_root_with_correct_value) {
 }
 
 MU_TEST(test_parse_root_with_inexistent_path) {
-s
+	std::string expected_result = "Invalid number of arguments in a \"root\" directive";
+	std::string result;
+	Server server;
+	try {
+		server.parseRoot("/var/www/html /var/www/invalid");
+	} catch (std::invalid_argument& e) {
+		std::cerr << e.what() << std::endl;
+		result = e.what();
+	}
+	mu_check(expected_result == result);	
+}
+
+MU_TEST(test_parse_index_with_correct_value) {
+	std::string expected_result = "/var/www/html/index.html";
+
+	Server server;
+	server.parseIndex("/var/www/html/index.html");
+
+	mu_check(expected_result == server.index);
+}
+
+MU_TEST(test_parse_error_page_with_correct_value) {
+	std::string expected_result = "/var/www/html/error.html";
+
+	Server server;
+	server.parseErrorPage("404 /var/www/html/error.html");
+
+	mu_check(expected_result == server.errorPage["404"]);
 }
 
 MU_TEST_SUITE(parse_config_file) {
@@ -73,6 +100,8 @@ MU_TEST_SUITE(parse_config_file) {
 	MU_RUN_TEST(test_parse_listen_with_correct_ip_and_port_value);
 	MU_RUN_TEST(test_parse_listen_with_incorrect_ip_and_port_value);
 	MU_RUN_TEST(test_parse_root_with_correct_value);
+	MU_RUN_TEST(test_parse_root_with_inexistent_path);
+	MU_RUN_TEST(test_parse_index_with_correct_value);
 }
 
 int main(int argc, char *argv[]) {
