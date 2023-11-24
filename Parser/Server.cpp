@@ -32,16 +32,26 @@ void Server::parseIndex(std::string value){
 // In case of invalid error page, nginx behavior is redirect to a inexistent page.
 // I prefer throw an exception instead.
 void Server::parseErrorPage(std::string value){
-	if(access(value.c_str(), R_OK) != 0)
+	std::vector<std::string> tokens = tokenizer(value, ' ');
+
+	std::string error_page = tokens.back();
+	if(access(error_page.c_str(), R_OK) != 0)
 		throw std::invalid_argument("Invalid error_page value");
-	this->errorPage = value;
+	this->errorPage = error_page;
 }
 
+//TODO: confirm with rafa if we want to accept only int or m nonation too.
 void Server::parseClientMaxBodySize(std::string value){
-	std::cout << value << "\n";
-	//ex: 8042 (int only)
+	//ex: 8042m 
+	for (size_t i = 0; i < value.size(); i++) {
+		if(isdigit(value[i]) == 0 && value[i] != 'm') {
+			throw std::invalid_argument("Invalid client_max_body_size value");
+		}
+	}
+	this->clientMaxBodySize = value;
 }
 
+// TODO: confirm if will come whole location or just the directives
 void Server::parseLocation(std::string path, std::string value){
 	std::cout << path << " " << value << "\n";
 	//ex: path: /dir/
