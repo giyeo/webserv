@@ -4,6 +4,30 @@ Request::Request(const char *recv) {
 	// std::cout << "---------------\n"<< recv << "\n---------------\n";
 	requestParser(recv);
 }
+#include "fstream"
+void replicateHttpRequestContent(const char* recv, unsigned long contentLength) {
+    // Find the start of the content by searching for the blank line that separates headers and body
+    
+	const char* contentStart = strstr(recv, "\r\n\r\n");
+    std::cout << contentStart - recv << "diff \n";
+	std::cout << contentLength << "\n";
+	if (!contentStart) {
+        std::cerr << "Invalid HTTP request: no blank line separating headers and body." << std::endl;
+        return;
+    }
+    contentStart += 4;
+    // Open the output file in binary mode
+    std::ofstream outputFileStream("outputFile.webp", std::ios::binary);
+    if (!outputFileStream) {
+        std::cerr << "Error opening output file." << std::endl;
+        return;
+    }
+    // Write the content to the output file
+    outputFileStream.write(contentStart, contentLength);
+    // Close the output file
+    outputFileStream.close();
+    std::cout << "File replication complete." << std::endl;
+}
 
 void Request::requestParser(const char *recv) {
 	std::istringstream iss(recv);
@@ -22,11 +46,7 @@ void Request::requestParser(const char *recv) {
         this->contentType = headers["Content-Type"];
 	}
 	std::cout << "|" << contentType.length() <<"| \n";
-	if(this->method == "POST") {
-		while (std::getline(iss, line)) {
-			// std::cout << line << "\n";
-		}
-	}
+	replicateHttpRequestContent(recv, atoi(headers["Content-Length"].c_str()));
 }
 
 void Request::parseRequestLine(std::vector<std::string> token) {

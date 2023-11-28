@@ -66,22 +66,24 @@ void handle_request(int server_socket) {
 			}
 			// Communication with the client
 			else {
-				char buffer[65536];
-				int bytes_received = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
-				if (bytes_received <= 0) {
+				char *totalBuffer;
+				char buffer[4096];
+				int total_received = 0;
+				int bytes_received = 0;
+				while ((bytes_received = recv(events[i].data.fd, buffer, sizeof(buffer), 0)) > 0) {
+					total_received += bytes_received;
+				}
+				total_received += bytes_received;
+				if (bytes_received < 0) {
 					std::cout << bytes_received << "\n";
 					if(errno == EAGAIN || errno == EWOULDBLOCK)
 						std::cout << "HANGING\n";
 					epoll_ctl(epollFd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
 					close(events[i].data.fd);
-
-				} else {
-					buffer[bytes_received] = '\0';
-					Request httpReq((const char *)&buffer);
-					Resource resource(httpReq, events[i].data.fd);
-					 //for test only
-					//  sleep(2);
 				}
+				std::cout << "bytes received:" << total_received << "\n";
+				Request httpReq((const char *)&totalBuffer);
+				Resource resource(httpReq, events[i].data.fd);
 			}
 		}
 	}

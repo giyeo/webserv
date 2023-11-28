@@ -1,0 +1,58 @@
+i have 2 years of experience, working with Java (Spring) and typescript in Brazil's greatest Telecom.
+academic experience creating low level applications using C/C++ and Python.
+I have interest in Backend, Systems programming and embedded systems.
+Experience in leading architectural decisions in small projects inside the company
+Experience working with legacy code and Software archaeology (yes, that's a thing).
+
+tell about company projects.
+BCM, PRUMA, ReportMaker-BCM, Report-Sender-BCM, WFM Fenix.
+Java, Spring, Microservices, Kafka, API, Hexagonal, OOP, Clean code.
+
+Putting toghether those legacy codes to Docker because of Antivirus stuff etc.
+Using Jenkins and K8's to manage Build and deploy of projects.
+
+and continuous deployment (CI/CD) pipelines, and how you ensure the quality and reliability of your code.
+Unit Tests, Component tests, end-to-end tests.
+
+Communication and Collaboration:
+everyone needs help, be open to ask for it, and search and hear for those how need help or just a hand is very important. Just like code, Encapsulate ideas into blackboxes are very important, understanding this, is very important to communicate with non-technical people.
+
+Adaptability and Learning:
+in 42 we learn just like in a lot of projects in the realworld, a task that you have absolute no idea how to start, to a sophisticated and reliable code, you have to learn, remember, ask for help, and teach in order to learn effectevely, once you do this, your team work members will do the same, they will feel open to do so.
+
+Leadership and Goal-Setting:
+if i have an idea of a solution in my head, i just go there and implement it, check why is that a bad idea, and repeat, until i'm satisfied, sharing all the steps with colleagues, because of this, independency is very important for me, and excess of bureaucracy can slow my style of work substancially.
+
+Continuous Improvement and Innovation:
+The client, people that uses what you've created, know what they want, talk with those people, you are going to be
+surprise in the amount of good ideas they have, and how they can spot clear problems in the actual runnning of things.
+
+Learning Opportunities:
+I take any learning oportunities, i just love that.
+
+personal projects.
+Minishell, Phylosophers, Recomm, API's ETC.
+
+
+Mid-Level Software Engineer
+
+
+__________________________________
+why i want to leave my current company.
+
+- there is no opportunity to grow.
+- the fact that it's not a tech company, but rather a telecom, has shown its fierces.
+- the current problems that i have to solve are not exciting.
+- also the problem that you always have to solve the same problem multiple times, we do not reuse solutions.
+
+
+____________________________________
+
+Professional ex: java, js/ts, python
+academical ex: C/C++, Bash
+personal interest: Rust, Go.
+
+took the iniciative Use docker to local developing on legacy systems
+create scripts to auto manage services and stuff.
+
+Divde the curriculum in 3 parts, Professional, Academical and Personal
