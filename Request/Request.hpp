@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <fstream>
 
 class Request { 
 	public:
@@ -29,12 +30,14 @@ class Request {
 		std::map<std::string, std::string> parseQueryParameters(std::string fullPath) const;
 		std::string parsePath(std::string fullPath) const;
 
+		void replicateHttpRequestContent(const char* recv);
 		void parseRequestLine(std::vector<std::string> token);
 	private:
 		std::string method;
 		std::string path;
 		std::string formDataBoundary;
 		std::string contentType;
+		unsigned long contentLength;
 		std::map<std::string, std::string> pathVariables;
 		std::map<std::string, std::string> headers;
 
