@@ -17,9 +17,11 @@ void Request::requestParser(const char *recv) {
 			break;
 	}
 	//PARSE REQUEST BODY (TEXT ONLY FOR NOW)
-	std::cout << "|" << contentType.length() <<"| \n";
 	this->contentLength = atoi(headers["Content-Length"].c_str());
-	replicateHttpRequestContent(recv);
+	if (this->method == "POST"
+		&& headers["Content-Type"] == "text/plain"
+		&& this->contentLength != 0)
+		replicateHttpRequestContent(recv);
 }
 
 void Request::parseRequestLine(std::vector<std::string> token) {
@@ -44,6 +46,10 @@ bool Request::parseHeaders(std::vector<std::string> token) {
 	if(token.empty() || token.size() == 0 || token[0].empty())
 		return true;
 	std::string key = token[0];
+
+	size_t lastDigit = token[1].length() - 1;
+	if(token[1][lastDigit] == '\r')
+		token[1] = token[1].substr(0, lastDigit);
 	std::string value = token[1];
 	this->headers[key] = value.substr(1, value.npos);
 	return false;
@@ -97,7 +103,7 @@ void Request::printRequest() const {
 
 void Request::printMap(std::map<std::string, std::string> map) const {
 	for (std::map<std::string, std::string>::const_iterator it = map.begin(); it != map.end(); ++it) {
-		std::cout << it->first << " " << it->second << std::endl;
+		std::cout << it->first << " " << it->second << "." << std::endl;
 	}
 }
 
