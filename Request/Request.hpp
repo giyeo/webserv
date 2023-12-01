@@ -9,15 +9,18 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <fstream>
+#include <vector>
 
-class Request { 
+class Request {
 	public:
 		Request(const char *recv);
 		void requestParser(const char *recv);
 
 		std::string getMethod() const;
 		std::string getPath() const;
-		std::string getFormDataBoundary() const;
+		unsigned long getContentLength() const;
+		std::vector<char> getRequestBody() const;
 		std::map<std::string, std::string> getPathVariables() const;
 		std::map<std::string, std::string> getHeaders() const;
 
@@ -29,12 +32,14 @@ class Request {
 		std::map<std::string, std::string> parseQueryParameters(std::string fullPath) const;
 		std::string parsePath(std::string fullPath) const;
 
+		void replicateHttpRequestContent(const char* recv);
 		void parseRequestLine(std::vector<std::string> token);
 	private:
 		std::string method;
 		std::string path;
-		std::string formDataBoundary;
+		std::vector<char> requestBody;
 		std::string contentType;
+		unsigned long contentLength;
 		std::map<std::string, std::string> pathVariables;
 		std::map<std::string, std::string> headers;
 

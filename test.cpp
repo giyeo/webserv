@@ -1,9 +1,5 @@
 #include <cassert>
 #include "Request/Request.hpp"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include "Utils.hpp"
 #define GREEN "\033[1;32m"
 #define RESET "\033[0m"
 typedef std::string (*FunctionPointer)();
@@ -11,6 +7,7 @@ typedef std::string (*FunctionPointer)();
 
 
 std::string readFile(std::string filePath);
+char* readFileBinary(const char* filename);
 //Maybe create my own assert that uses __LINE__ to get the line number.
 std::string simpleGetParserTest() {
     std::string file = readFile(__FUNCTION__);
@@ -42,24 +39,26 @@ std::string getWithSomeHeaders() {
     assert(!req.getHeaders()["Content-Type"].compare("text for test"));
     return __FUNCTION__;
 }
-//may be useless
-std::string postWithFormData() {
-    std::string file = readFile(__FUNCTION__);
-    assert(!file.empty());
+
+std::string postWithFile() {
+	std::string file = readFile(__FUNCTION__);
+	assert(!file.empty());
     Request req(file.c_str());
     assert(req.getMethod() == "POST");
     assert(req.getPath() == "/index.html");
-    assert(!req.getFormDataBoundary().compare("X-INSOMNIA-BOUNDARY"));
-    return __FUNCTION__;
+	assert(!req.getRequestBody().empty());
+	return __FUNCTION__;
 }
 
 int main() {
     FunctionPointer f[] = {
         simpleGetParserTest,
         getWithPathVariables,
-        getWithSomeHeaders
+        getWithSomeHeaders,
+		postWithFile,
+		postWithPng
     };
-    
+    //
     for (unsigned long i = 0; i < sizeof(f) / sizeof(f[0]); ++i) {
         std::string funcName = f[i](); // Call the function at index i
         std::cout << GREEN << "✅ PASSED " << RESET << funcName << std::endl;
@@ -89,4 +88,32 @@ std::string readFile(std::string filePath) {
     // Close the file
     inputFile.close();
 	return res;
+}
+
+char* readFileBinary(const char* filename) {
+    std::ifstream file(filename, std::ios::binary);
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return NULL;
+    }
+
+    // Get the size of the file
+    file.seekg(0, std::ios::end);
+    std::streampos fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Allocate memory for the content
+    char* buffer = new char[static_cast<size_t>(fileSize) + 1]; // +1 for null terminator
+
+    // Read the content into the buffer
+    file.read(buffer, fileSize);
+
+    // Add null terminator to the end of the buffer
+    buffer[fileSize] = '\0';
+
+    // Close the file
+    file.close();
+
+    return buffer;
 }

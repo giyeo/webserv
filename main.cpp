@@ -20,6 +20,56 @@ int create_epoll(int server_socket) {
 	return epollFd;
 }
 
+
+int createClientSocket(int server_socket) {
+	struct sockaddr_in client_addr;
+	socklen_t client_addr_len = sizeof(client_addr);
+	int client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_len);
+	if (client_socket == -1) {
+		perror("Accepting connection failed");
+		return ; // Handle the error and continue accepting connections
+	}
+	
+	struct timeval timeout;
+	timeout.tv_sec = 1; // 30 seconds timeout
+	timeout.tv_usec = 0;
+
+	if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+		perror("Error setting socket timeout");
+		// Handle the error
+	}
+
+	fcntl(client_socket, F_SETFL, O_NONBLOCK);
+	return client_socket;
+}
+
+void serverEvent(int server_socket, int epollFd) {
+	epoll_event event;
+
+	int client_socket = createClientSocket(server_socket);
+	
+	event.events = EPOLLIN | EPOLLET;
+	event.data.fd = client_socket;
+	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1) {
+		perror("epoll_ctl failed");
+		close(client_socket);
+	}
+}
+
+void clientEvent(int client_socket, int epollFd) {
+	char buffer[8196];
+	int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
+	if (bytes_received <= 0) {
+		std::cout << bytes_received << "\n";
+		epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
+		close(client_socket);
+	} else {
+		buffer[bytes_received] = '\0';
+		Request httpReq((const char *)&buffer);
+		Resource resource(httpReq, client_socket);
+	}
+}
+
 void handle_request(int server_socket) {
 	int epollFd;
 	epoll_event events[MAX_EVENTS];
@@ -34,55 +84,10 @@ void handle_request(int server_socket) {
 		}
 
 		for (int i = 0; i < numEvents; ++i) {
-			// Accept incoming connections
-            if (events[i].data.fd == server_socket) {
-				epoll_event event;
-				struct sockaddr_in client_addr;
-				socklen_t client_addr_len = sizeof(client_addr);
-				int client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_len);
-				if (client_socket == -1) {
-					perror("Accepting connection failed");
-					continue; // Handle the error and continue accepting connections
-				}
-				
-				struct timeval timeout;
-                timeout.tv_sec = 1; // 30 seconds timeout
-                timeout.tv_usec = 0;
-
-                if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-                    perror("Error setting socket timeout");
-                    // Handle the error
-                }
-
-				fcntl(client_socket, F_SETFL, O_NONBLOCK);
-				
-                event.events = EPOLLIN | EPOLLET;
-                event.data.fd = client_socket;
-                if (epoll_ctl(epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1) {
-                    perror("epoll_ctl failed");
-                    close(client_socket);
-                }
-			
-			}
-			// Communication with the client
-			else {
-				char buffer[65536];
-				int bytes_received = recv(events[i].data.fd, buffer, sizeof(buffer), 0);
-				if (bytes_received <= 0) {
-					std::cout << bytes_received << "\n";
-					if(errno == EAGAIN || errno == EWOULDBLOCK)
-						std::cout << "HANGING\n";
-					epoll_ctl(epollFd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
-					close(events[i].data.fd);
-
-				} else {
-					buffer[bytes_received] = '\0';
-					Request httpReq((const char *)&buffer);
-					Resource resource(httpReq, events[i].data.fd);
-					 //for test only
-					//  sleep(2);
-				}
-			}
+            if (events[i].data.fd == server_socket)
+				serverEvent(server_socket, epollFd);
+			else
+				clientEvent(events[i].data.fd, epollFd);
 		}
 	}
 	close(epollFd);

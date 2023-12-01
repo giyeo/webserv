@@ -19,28 +19,40 @@ TEST_SRCS =	test.cpp \
 		Request/Request.cpp \
 		Resource/Resource.cpp
 
+<<<<<<< HEAD
 MINUNIT_SRCS_FILES =	minunit.c \
 					Parser/Utils.cpp\
 					Parser/Server.cpp\
 					Parser/Location.cpp 
+=======
+# Object files
+OBJS = $(SRCS:.cpp=.o)
+TEST_OBJS = $(TEST_SRCS:.cpp=.o)
+>>>>>>> origin
 
 TARGET = server
-TEST = test
+TEST_TARGET = test
 
 all: $(TARGET)
 
-$(TARGET): $(SRCS)
+$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-test: $(TEST)
-
-$(TEST): $(TEST_SRCS)
+$(TEST_TARGET): $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
+
+# Rule to compile source files to object files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
+<<<<<<< HEAD
 	rm -f $(TARGET)
 
 minunit: $(MINUNIT_SRCS_FILES)
 	$(CXX) $(CXXFLAGS) $(MINUNIT_SRCS_FILES) -o $(TEST) 
 	./$(TEST)
 	rm -f $(TEST)
+=======
+	rm -f $(TARGET) $(TEST_TARGET) $(OBJS) $(TEST_OBJS)
+>>>>>>> origin
