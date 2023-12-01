@@ -88,6 +88,12 @@ void handle_request(int server_socket) {
 	close(epollFd);
 }
 
+void execute_mocked_requests() {
+	std::string buffer = Resource::readFile("./_TestFiles/postWithFile");
+	Request httpReq(buffer.c_str());
+	// Resource resource(httpReq, 1);
+}
+
 int main(int argc, char **argv) {
 	if(argc != 2) {
 		std::cout << "Must have one argument only, example: ./server webserv.conf\n";
@@ -97,6 +103,7 @@ int main(int argc, char **argv) {
 	Configuration server_config(argv[1]);
 	SocketHandler server_socket(server_config.getConfig());
 	// Handle accept incoming requests
-	handle_request(server_socket.getFd()); //we are going to send the server_config as well, later..
+	//handle_request(server_socket.getFd()); //we are going to send the server_config as well, later..
+	execute_mocked_requests();
 	return (0);
 }

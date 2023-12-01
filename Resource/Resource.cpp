@@ -3,7 +3,7 @@
 void Resource::serveFile(std::string filePath, int clientFd) const {
 	response_object resp;
 
-	std::string fileContent = readFile(filePath);
+	std::string fileContent = readFile("./_Files/" + filePath);
 
 	resp.http_version = "1.1";
 	resp.status_code = "200";
@@ -108,9 +108,8 @@ std::string Resource::itos(int num) const {
     return ss.str();
 }
 
-std::string Resource::readFile(std::string filePath) const {
+std::string Resource::readFile(std::string fullPath) {
 	// Create an input file stream
-	std::string fullPath = "./_Files/" + filePath;
 	std::ifstream inputFile(fullPath.c_str(), std::ifstream::in);
 
     // Check if the file was successfully opened
@@ -124,9 +123,11 @@ std::string Resource::readFile(std::string filePath) const {
     std::string line;
     while (std::getline(inputFile, line)) {
 		res += line;
+		res += "\n";
     }
 
     // Close the file
     inputFile.close();
+	std::cout << "Success at Reading: " << fullPath << "\n"; 
 	return res;
 }
