@@ -19,16 +19,13 @@ TEST_SRCS =	test.cpp \
 		Request/Request.cpp \
 		Resource/Resource.cpp
 
-<<<<<<< HEAD
 MINUNIT_SRCS_FILES =	minunit.c \
 					Parser/Utils.cpp\
 					Parser/Server.cpp\
 					Parser/Location.cpp 
-=======
 # Object files
 OBJS = $(SRCS:.cpp=.o)
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
->>>>>>> origin
 
 TARGET = server
 TEST_TARGET = test
@@ -46,13 +43,10 @@ $(TEST_TARGET): $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-<<<<<<< HEAD
 	rm -f $(TARGET)
 
 minunit: $(MINUNIT_SRCS_FILES)
 	$(CXX) $(CXXFLAGS) $(MINUNIT_SRCS_FILES) -o $(TEST) 
 	./$(TEST)
 	rm -f $(TEST)
-=======
 	rm -f $(TARGET) $(TEST_TARGET) $(OBJS) $(TEST_OBJS)
->>>>>>> origin
