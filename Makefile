@@ -19,18 +19,24 @@ TEST_SRCS =	test.cpp \
 		Request/Request.cpp \
 		Resource/Resource.cpp
 
+# Object files
+OBJS = $(SRCS:.cpp=.o)
+TEST_OBJS = $(TEST_SRCS:.cpp=.o)
+
 TARGET = server
-TEST = test
+TEST_TARGET = test
 
 all: $(TARGET)
 
-$(TARGET): $(SRCS)
+$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-test: $(TEST)
-
-$(TEST): $(TEST_SRCS)
+$(TEST_TARGET): $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
+
+# Rule to compile source files to object files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(TEST_TARGET) $(OBJS) $(TEST_OBJS)

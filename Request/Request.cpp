@@ -70,27 +70,32 @@ std::vector<std::string> Request::splitLine(std::string line, std::string fline)
 }
 
 void Request::replicateHttpRequestContent(const char* recv) {
-    // Find the start of the content by searching for the blank line that separates headers and body
+	// Find the start of the content by searching for the blank line that separates headers and body
 
 	const char* contentStart = strstr(recv, "\r\n\r\n");
-    std::cout << contentStart - recv << "diff \n";
-	std::cout << contentLength << "\n";
 	if (!contentStart) {
-        std::cerr << "Invalid HTTP request: no blank line separating headers and body." << std::endl;
-        return;
-    }
-    contentStart += 4;
-    // Open the output file in binary mode
-    std::ofstream outputFileStream("outputFile.txt", std::ios::binary);
-    if (!outputFileStream) {
-        std::cerr << "Error opening output file." << std::endl;
-        return;
-    }
-    // Write the content to the output file
-    outputFileStream.write(contentStart, contentLength);
-    // Close the output file
-    outputFileStream.close();
-    std::cout << "File replication complete." << std::endl;
+		std::cerr << "Invalid HTTP request: no blank line separating headers and body." << std::endl;
+		return;
+	}
+	contentStart += 4;
+	std::size_t length = std::char_traits<char>::length(contentStart);
+	std::cout << "content:" << contentLength << ", calculed:" << length << "\n\n";
+	std::vector<char> charVector(contentStart, contentStart + length);
+	this->requestBody = charVector;
+	// for (std::vector<char>::iterator it = charVector.begin(); it != charVector.end(); ++it) {
+	//     std::cout << *it;
+	// }
+	// std::cout << "\n";
+	// Open the output file in binary mode
+	std::ofstream outputFileStream("outputFile.txt", std::ios::binary);
+	if (!outputFileStream) {
+		std::cerr << "Error opening output file." << std::endl;
+		return;
+	}
+	// Write the content to the output file
+	outputFileStream.write(contentStart, contentLength);
+	// Close the output file
+	outputFileStream.close();
 }
 
 void Request::printRequest() const {
@@ -123,8 +128,12 @@ std::map<std::string, std::string> Request::getPathVariables() const {
 	return this->pathVariables;
 }
 
-std::string Request::getFormDataBoundary() const {
-	return this->formDataBoundary;
+unsigned long Request::getContentLength() const {
+	return this->contentLength;
+}
+
+std::vector<char> Request::getRequestBody() const {
+	return this->requestBody;
 }
 
 std::string Request::getHeaderValue(std::string headerName) const {
