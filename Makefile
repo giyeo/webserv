@@ -19,9 +19,10 @@ TEST_SRCS =	test.cpp \
 		Request/Request.cpp \
 		Resource/Resource.cpp
 
-TEST_SRCS_FILES =	minunit.c \
+MINUNIT_SRCS_FILES =	minunit.c \
 					Parser/Utils.cpp\
-					Parser/Server.cpp 
+					Parser/Server.cpp\
+					Parser/Location.cpp 
 
 TARGET = server
 TEST = test
@@ -39,7 +40,7 @@ $(TEST): $(TEST_SRCS)
 clean:
 	rm -f $(TARGET)
 
-minunit: $(TEST_SRCS_FILES)
-	$(CXX) $(CXXFLAGS) $(TEST_SRCS_FILES) -o $(TEST) 
+minunit: $(MINUNIT_SRCS_FILES)
+	$(CXX) $(CXXFLAGS) $(MINUNIT_SRCS_FILES) -o $(TEST) 
 	./$(TEST)
 	rm -f $(TEST)

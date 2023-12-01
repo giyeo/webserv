@@ -10,8 +10,11 @@ std::vector<std::string> tokenizer(std::string input, char delimiter) {
 	std::istringstream tokenStream(input);
 	std::string token;
 	
-	while (std::getline(tokenStream, token, delimiter))
+	while (std::getline(tokenStream, token, delimiter)) {
+		if (allblank(0, token.size(), token, false))
+			continue;
 		tokens.push_back(token);
+	}
 	return tokens;
 }
 

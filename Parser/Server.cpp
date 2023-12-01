@@ -40,22 +40,40 @@ void Server::parseErrorPage(std::string value){
 	this->errorPage = error_page;
 }
 
-//TODO: confirm with rafa if we want to accept only int or m nonation too.
 void Server::parseClientMaxBodySize(std::string value){
-	//ex: 8042m 
 	for (size_t i = 0; i < value.size(); i++) {
-		if(isdigit(value[i]) == 0 && value[i] != 'm') {
+		if(isdigit(value[i]) == 0) {
 			throw std::invalid_argument("Invalid client_max_body_size value");
 		}
 	}
 	this->clientMaxBodySize = value;
 }
 
-// TODO: confirm if will come whole location or just the directives
-void Server::parseLocation(std::string path, std::string value){
-	std::cout << path << " " << value << "\n";
-	//ex: path: /dir/
-	//ex: value: try_files $uri $uri/ =404  try_files $uri $uri/ =404          
+void Server::parseLocation(std::string path, std::string value) {
+	Location location;
+	std::istringstream ss(value);
+	std::string line;
+	std::string directive;
+	std::string argument;
+
+	location.path = path;
+	
+	while (getline(ss, line)) {
+		std::vector<std::string> line_tokens = tokenizer(line, ' ');
+
+		directive = line_tokens[0];
+		while(line_tokens.size() > 1) {
+			argument += line_tokens[1];
+			if(line_tokens.size() > 2)
+				argument += " ";
+			line_tokens.erase(line_tokens.begin() + 1);
+		}
+		location.dispatcher(directive, argument);
+		directive.clear();
+		argument.clear();
+	}
+
+	this->locations.push_back(location);
 }
 
 typedef void (Server::*MemberFunction)(std::string);

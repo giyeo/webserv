@@ -1,6 +1,7 @@
 #include "minunit.h"
 #include "./Parser/Utils.hpp"
 #include "./Parser/Server.hpp"
+#include "./Parser/Location.hpp"
 
 MU_TEST(test_tokenizer_function) {
 	std::vector<std::string> expected_result;
@@ -47,7 +48,6 @@ MU_TEST(test_parse_listen_with_incorrect_ip_and_port_value) {
 	try {
 		server.parseListen("127.0.0.1:80 8080");
 	} catch (std::invalid_argument& e) {
-		std::cerr << e.what() << std::endl;
 		result = e.what();
 	}
 	mu_check(expected_result == result);
@@ -69,7 +69,6 @@ MU_TEST(test_parse_root_with_inexistent_path) {
 	try {
 		server.parseRoot("/var/www/html /var/www/invalid");
 	} catch (std::invalid_argument& e) {
-		std::cerr << e.what() << std::endl;
 		result = e.what();
 	}
 	mu_check(expected_result == result);	
@@ -89,19 +88,16 @@ MU_TEST(test_parse_error_page_with_correct_value) {
 
 	Server server;
 	server.parseErrorPage("404 /var/www/html/error.html");
-	std::cout << server.errorPage << std::endl;
+
 	mu_check(expected_result == server.errorPage);
 }
 
 MU_TEST(test_client_max_body_size_with_correct_value) {
-	std::string expected_result = "1m";
-
+	std::string expected_result = "100";
 	Server server;
 	try {
-		server.parseClientMaxBodySize("1m");
-	} catch (std::invalid_argument& e) {
-		std::cerr << e.what() << std::endl;
-	}
+		server.parseClientMaxBodySize("100");
+	} catch (std::invalid_argument& e) {}
 
 	mu_check(expected_result == server.clientMaxBodySize);
 }
@@ -113,11 +109,36 @@ MU_TEST(test_client_max_body_size_with_incorrect_value) {
 	try {
 		server.parseClientMaxBodySize("100kb");
 	} catch (std::invalid_argument& e) {
-		std::cerr << e.what() << std::endl;
 		result = e.what();
 	}
 
 	mu_check(expected_result == result);
+}
+
+MU_TEST(test_client_max_body_size_with_incorrect_value_2) {
+	std::string expected_result = "Invalid client_max_body_size value";
+	std::string result;
+	Server server;
+	try {
+		server.parseClientMaxBodySize("42m");
+	} catch (std::invalid_argument& e) {
+		result = e.what();
+	}
+
+	mu_check(expected_result == result);
+}
+
+MU_TEST(test_location_with_correct_value) {
+
+	Server server;
+	server.parseLocation("/images" , "root /var/www/html/images \n index index.html \n proxy_pass http://backend \n error_page 404 /var/www/html/error.html");
+
+
+	mu_check(server.locations[0].path == "/images");
+	mu_check(server.locations[0].root == "/var/www/html/images");
+	mu_check(server.locations[0].index == "index.html");
+	mu_check(server.locations[0].proxyPass == "http://backend");
+	mu_check(server.locations[0].errorPage == "404 /var/www/html/error.html");
 }
 
 MU_TEST_SUITE(parse_config_file) {
@@ -132,7 +153,8 @@ MU_TEST_SUITE(parse_config_file) {
 	MU_RUN_TEST(test_parse_error_page_with_correct_value);
 	MU_RUN_TEST(test_client_max_body_size_with_correct_value);
 	MU_RUN_TEST(test_client_max_body_size_with_incorrect_value);
-
+	MU_RUN_TEST(test_client_max_body_size_with_incorrect_value_2);
+	MU_RUN_TEST(test_location_with_correct_value);
 }
 
 int main(int argc, char *argv[]) {
