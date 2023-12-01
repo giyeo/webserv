@@ -13,7 +13,6 @@ public:
 	std::string root;
 	std::string index;
 	std::string errorPage;
-	std::string returnCode;
 	std::string proxyPass;
 
 	void parseRoot(std::string value);
