@@ -10,16 +10,17 @@
 #include <cerrno>
 #include <cstdio>
 #include "../Configuration/Configuration.hpp"
+#include <fcntl.h>
 
 class SocketHandler {
 	public:
 		SocketHandler(Config &config);
 		~SocketHandler();
 
-		void	screate();
-		void	soptions();
-		void	sbind();
-		void	slisten();
+		void	socketCreate();
+		void	socketOptions();
+		void	socketBind();
+		void	socketListen();
 		int		getFd();
 	private:
 		int fd;
