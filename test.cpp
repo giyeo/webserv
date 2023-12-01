@@ -1,9 +1,10 @@
 #include <cassert>
 #include "Request/Request.hpp"
-
 #define GREEN "\033[1;32m"
 #define RESET "\033[0m"
 typedef std::string (*FunctionPointer)();
+
+
 
 std::string readFile(std::string filePath);
 char* readFileBinary(const char* filename);
