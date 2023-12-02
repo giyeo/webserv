@@ -157,7 +157,7 @@ std::vector<char> Request::getRequestBody() const {
 std::string Request::getHeaderValue(std::string headerName) const {
 	std::map<std::string, std::string>::const_iterator it = headers.find(headerName);
 	if (it != headers.end())
-       	return it->second;
+		return it->second;
 	std::cout << "Header not found";
 	return "";
 }

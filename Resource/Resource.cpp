@@ -54,7 +54,7 @@ void Resource::handleCGI(std::string filePath, Request &httpReq, int clientFd) {
 }
 
 void Resource::uploadFile(Request &httpReq, int clientFd) {
-	httpReq.getHeaderValue("");
+	// httpReq.getHeaderValue("");
 	response_object resp;
 	std::string fileContent = "nice";
 

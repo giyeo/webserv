@@ -102,20 +102,17 @@ void serverEvent(int server_socket, int epollFd) {
 static std::map<int, Request> connectionHeaders;
 
 void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
-	std::cout << "Client Request Arrived\n";
+	std::cout << "Client " << client_socket << " Request Arrived\n";
+	ssize_t bytesRead;
 	char buffer[8196];
 
-	ssize_t bytesRead = 0;
-
 	while ((bytesRead = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
-		
 		buffer[bytesRead] = '\0';
 		std::map<int, Request>::iterator it = connectionHeaders.find(client_socket);
 		if(it == connectionHeaders.end()) {
 			Request httpReq((const char *)&buffer);
 			connectionHeaders[client_socket] = httpReq;
 		}
-		
 		connectionHeaders[client_socket].requestBodyBuffer.append(buffer);
 		connectionHeaders[client_socket].totalBytesRead += bytesRead;
 	}
@@ -134,24 +131,16 @@ void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
 		std::cout << "Received data: " << connectionHeaders[client_socket].totalBytesRead << " bytes" << std::endl;
 		
 		if(connectionHeaders[client_socket].getContentLength() == connectionHeaders[client_socket].totalBytesRead - connectionHeaders[client_socket].getHeadersLength()) {
-			std::cout << "contentlength: "<< connectionHeaders[client_socket].getContentLength() << "\n";
-			std::cout << "totalnow: "<< connectionHeaders[client_socket].totalBytesRead << "\n";
-			std::cout << "headerslength: " << connectionHeaders[client_socket].getHeadersLength() << "\n";
-			std::cout << connectionHeaders[client_socket].requestBodyBuffer << '\n';
+			// std::cout << "contentlength: "<< connectionHeaders[client_socket].getContentLength() << "\n";
+			// std::cout << "totalnow: "<< connectionHeaders[client_socket].totalBytesRead << "\n";
+			// std::cout << "headerslength: " << connectionHeaders[client_socket].getHeadersLength() << "\n";
+			// std::cout << connectionHeaders[client_socket].requestBodyBuffer << '\n';
 			connectionHeaders[client_socket].parseRequestBody();
+			Resource resource(connectionHeaders[client_socket], client_socket, serverSocket);
+			connectionHeaders.erase(client_socket);
 			close(client_socket);
 		}
 	}
-	// int bytes_received = recv(client_socket, buffer, sizeof(buffer), 0);
-	// if (bytes_received <= 0) {
-	// 	epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
-	// 	close(client_socket);
-	// } else {
-	// 	buffer[bytes_received] = '\0';
-	// 	std::cout << buffer << "\n";
-	// 	Request httpReq((const char *)&buffer);
-	// 	Resource resource(httpReq, client_socket, serverSocket);
-	// }
 }
 
 SocketHandler &getServerByFd(int fd, std::vector<SocketHandler> serverSockets) {
