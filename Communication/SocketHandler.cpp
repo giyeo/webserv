@@ -1,7 +1,7 @@
 #include "SocketHandler.hpp"
 
-SocketHandler::SocketHandler(Config &config): config(config) {
-	this->port = 8080;
+SocketHandler::SocketHandler(Server &server): server(server) {
+	this->port = atoi(server.listen.c_str());
 	this->nqueue = 8;
 
 	socketCreate();
@@ -11,7 +11,7 @@ SocketHandler::SocketHandler(Config &config): config(config) {
 }
 
 SocketHandler::~SocketHandler() {
-	close(this->fd);
+	
 };
 
 void SocketHandler::socketCreate() {
@@ -25,7 +25,7 @@ void SocketHandler::socketCreate() {
 void SocketHandler::socketOptions() {
 	int opt = 1;
 	if (setsockopt(this->fd, SOL_SOCKET,
-				SO_REUSEADDR | SO_REUSEPORT, &opt,
+				SO_REUSEADDR | SO_REUSEPORT, &opt, //TODO remove when intra
 				sizeof(opt))) {
 		perror("setsockopt");
 		exit(EXIT_FAILURE);
@@ -54,7 +54,7 @@ void SocketHandler::socketListen() {
 		close(this->fd);
 		exit(EXIT_FAILURE);
 	}
-	std::cout << "Server listening on port" << this->port << "..." << std::endl;
+	std::cout << "Server listening on port " << this->port << "..." << std::endl;
 }
 
 int SocketHandler::getFd() {

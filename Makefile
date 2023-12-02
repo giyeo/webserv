@@ -10,7 +10,11 @@ SRCS =	main.cpp \
 		Configuration/Configuration.cpp \
 		Response/Response.cpp \
 		Request/Request.cpp \
-		Resource/Resource.cpp
+		Resource/Resource.cpp \
+		Parser/Utils.cpp \
+		Parser/Server.cpp\
+		Parser/Location.cpp \
+		Parser/Parser.cpp
 
 TEST_SRCS =	test.cpp \
 		Communication/SocketHandler.cpp \

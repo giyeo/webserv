@@ -1,4 +1,5 @@
-#include "Server.hpp"
+#include "Parser.hpp"
+
 typedef std::map<std::string, std::string> mapStr;
 
 Server parseEachDirective(mapStr myConf, mapStr locations) {
@@ -13,16 +14,18 @@ Server parseEachDirective(mapStr myConf, mapStr locations) {
 }
 
 Server parseServerDirectives(std::string input) {
-	std::vector<std::string> names = {"server_name", "listen", "root", "index", "error_page", "location", "client_max_body_size"};
+	std::vector<std::string> names = myPushBack(7, "server_name", "listen", "root", "index", "error_page", "location", "client_max_body_size");
+	
 	std::map<std::string, std::string> myConf;
 	std::map<std::string, std::string> locations;
 	std::string key;
 	std::string value;
 	std::vector<std::string> locationContent = extractAndRemoveBracesContent(input);
-	std::vector<std::string> tokens = parseLine(input, ';');
-	
-	for (const std::string& str : tokens) {
-		std::vector<std::string> configuration = parseLine(str, ':');
+	std::vector<std::string> tokens = tokenizer(input, ';');
+
+	for (size_t i = 0; i < tokens.size(); i++) {
+		std::string str = tokens[i];
+		std::vector<std::string> configuration = tokenizer(str, ':');
 		if(configuration.size() == 2) {
 			key = trimString(configuration[0]);
 			value = configuration[1];
@@ -79,20 +82,18 @@ std::vector<std::string> parseServers(std::string input) {
 	return servers;
 }
 
-int main(int argc, char **argv) {
-	if(argc != 2)
-		exit(1);
-	std::string input = readFile(argv[1]);
+std::vector<Server> configurationParser(char *argv) {
+	std::string input = readFile(argv);
 
-	std::vector<std::map<std::string, std::vector<std::string>>> fullConfiguration;
 	std::vector<std::string> parsedServers = parseServers(input);
 	std::vector<Server> servers;
 	
-	for(int i = 0; i < parsedServers.size(); i++) {
+	for(size_t i = 0; i < parsedServers.size(); i++) {
 		if(parsedServers[i].empty() || allblank(0, parsedServers[i].size(), parsedServers[i], false))
 			error(__LINE__, "empty server configuration");
 
 		servers.push_back(parseServerDirectives(parsedServers[i]));
 		std::cout << "SUCCESS!\n";
 	}
+	return servers;
 }

@@ -72,25 +72,37 @@ void Resource::uploadFile(Request &httpReq, int clientFd) {
 	httpRes.sendResponse(clientFd);
 }
 
-Resource::Resource(Request &httpReq, int clientFd) {
+Resource::Resource(Request &httpReq, int clientFd, SocketHandler &server) {
+
+	std::cout << clientFd << server.getFd() << "\n";
+
+	//vai ter que fazer para cada server o resource file mapping
+	//root é a pasta raiz.
+	std::cout << server.server.root << "\n" ;
+
+
 	resourceToFileMapping["/"] = "index.html";
 	resourceToFileMapping["/index.html"] = "index.html";
 	resourceToFileMapping["/notFound"] = "notFound.html";
 	resourceToFileMapping["/test.py"] = "test.py";
 	resourceToFileMapping["/files"] = "files.html";
 
+
 	std::string resourcePath = httpReq.getPath();
+	std::cout << resourcePath << "\n";
 	std::string method = httpReq.getMethod();
-	std::map<std::string, std::string> pathVariables = httpReq.getPathVariables();
 
 	if (resourceToFileMapping.find(resourcePath) != resourceToFileMapping.end()) {
 		std::string filePath = resourceToFileMapping[resourcePath];
+
 		if (ft_find(filePath, ".py"))
 			handleCGI(filePath, httpReq, clientFd);
 		else if (method == "GET")
 			serveFile(filePath, clientFd);
 		else if (method == "POST")
 			uploadFile(httpReq, clientFd);
+		else if (method == "DELETE");
+			//TODO alguma coisa;
 	} else {
 		serveFile("notFound.html", clientFd);
 	}

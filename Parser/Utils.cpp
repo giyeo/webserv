@@ -35,26 +35,27 @@ std::string trimString(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
-// std::vector<std::string> extractAndRemoveBracesContent(std::string& input) {
-//     std::vector<std::string> extractedContent;
-//     std::regex pattern("\\{[^{}]*\\}");
+std::vector<std::string> extractAndRemoveBracesContent(std::string& input) {
+    std::vector<std::string> extractedContent;
 
-//     // Search for and iterate through all matches
-//     std::sregex_iterator it(input.begin(), input.end(), pattern);
-//     std::sregex_iterator end;
+    size_t posStart, posEnd;
+    while ((posStart = input.find('{')) != std::string::npos) {
+        posEnd = input.find('}');
+        if (posEnd == std::string::npos) {
+            // Handle the case where a closing brace is not found
+            break;
+        }
 
-//     while (it != end) {
-//         std::smatch match = *it;
-//         extractedContent.push_back(match.str()); // Add the matched content to the vector
-//         it++;
-//     }
+        // Extract the content between curly braces
+        std::string content = input.substr(posStart + 1, posEnd - posStart - 1);
+        extractedContent.push_back(content);
 
-//     // Remove the matched content from the input string
-//     input = std::regex_replace(input, pattern, "");
+        // Remove the content (including braces) from the input string
+        input.erase(posStart, posEnd - posStart + 1);
+    }
 
-//     return extractedContent;
-// }
-
+    return extractedContent;
+}
 //Check if string has anything other than blank
 bool allblank(size_t pivot, size_t location, std::string input, bool exit) {
 
@@ -91,4 +92,21 @@ std::string readFile(std::string filePath) {
     // Close the file
     inputFile.close();
 	return res;
+}
+
+std::vector<std::string> myPushBack(int count, ...) {
+	// Initialize va_list
+	std::vector<std::string> names;
+	va_list args;
+	va_start(args, count);
+
+	// Process each argument
+	for (int i = 0; i < count; ++i) {
+		// Access the current argument using va_arg
+		const char* str = va_arg(args, const char*);
+		names.push_back(str);
+	}
+	// Clean up va_list
+	va_end(args);
+	return names;
 }

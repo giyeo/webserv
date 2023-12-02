@@ -8,10 +8,11 @@
 #include <sys/socket.h>
 #include <fstream>
 #include <string>
+#include "../Communication/SocketHandler.hpp"
 
 class Resource {
 	public:
-		Resource(Request &httpReq, int clientFd);
+		Resource(Request &httpReq, int clientFd, SocketHandler &server);
 		static std::string readFile(std::string filePath);
 	private:
 		std::map<std::string, std::string> resourceToFileMapping;

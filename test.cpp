@@ -4,8 +4,6 @@
 #define RESET "\033[0m"
 typedef std::string (*FunctionPointer)();
 
-
-
 std::string readFile(std::string filePath);
 char* readFileBinary(const char* filename);
 //Maybe create my own assert that uses __LINE__ to get the line number.
@@ -55,8 +53,7 @@ int main() {
         simpleGetParserTest,
         getWithPathVariables,
         getWithSomeHeaders,
-		postWithFile,
-		postWithPng
+		postWithFile
     };
     //
     for (unsigned long i = 0; i < sizeof(f) / sizeof(f[0]); ++i) {

@@ -15,6 +15,7 @@
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include "Resource/Resource.hpp"
+#include "Parser/Parser.hpp"
 
 #define MAX_EVENTS 10
 

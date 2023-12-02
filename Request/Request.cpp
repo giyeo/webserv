@@ -16,6 +16,14 @@ void Request::requestParser(const char *recv) {
 		if(parseHeaders(splitLine(line, ":")) == 1)
 			break;
 	}
+	contentType = headers["Content-Type"];
+	// std::cout << "---------\n";
+	// std::cout << method << " " << path << " " << contentType << "\n";
+	// std::cout << "---------\n";
+	// printMap(this->pathVariables);
+	// std::cout << "---------\n";
+	// printMap(this->headers);
+	// std::cout << "---------\n";
 	//PARSE REQUEST BODY (TEXT ONLY FOR NOW)
 	this->contentLength = atoi(headers["Content-Length"].c_str());
 	if (this->method == "POST"
