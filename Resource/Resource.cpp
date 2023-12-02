@@ -15,49 +15,54 @@ void printVector(std::vector<std::string> vec) {
 	}
 } 
 
+std::string getFinalPath(Server &server, std::string uri) {
+	std::string finalPath;
+	std::string serverRoot = server.root;
+	std::string locationRoot;
+	std::cout << "getFinalPath --- PATH REQUESTED:" << uri << std::endl;
+	if (uri == "/")
+		return serverRoot + '/' + server.index;
+
+	std::vector<std::string> uriTokens = tokenizer(uri, '/');
+
+	// printVector(uriTokens);
+	for (size_t i = 0; i < server.locations.size(); i++) {
+		if (server.locations[i].path == '/' + uriTokens[0]) {
+			std::cout << "getFinalPath --- Location found" << std::endl;
+			locationRoot = server.locations[i].root;
+			if (locationRoot.empty()) {
+				std::cout << "getFinalPath ---" << server.locations[i].index << "\n";
+				if (uriTokens.size() == 1 && server.locations[i].index.empty())//TODO locations[i].index not parsing
+					return serverRoot + '/' + server.index;
+				else if (uriTokens.size() == 1 && server.locations[i].index != "")
+					return serverRoot + '/' + server.locations[i].index;
+				return serverRoot + uri;
+			} else {
+				if (uriTokens.size() == 1 && server.locations[i].index == "")
+					return locationRoot + '/' + server.index;
+				else if (uriTokens.size() == 1 && server.locations[i].index != "")
+					return locationRoot + '/' + server.locations[i].index;
+				return locationRoot + uri;
+			}
+		}
+	}
+	return serverRoot + "/notFound.html";
+}
+
 void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) const {
 	response_object resp;
 	std::string serverRoot = server.server.root;
 	std::string uri = httpReq.getPath();
 	std::string fileContent;
-	std::string finalPath;
-	
-	std::cout << "PATH REQUESTED:" << uri << std::endl;
-	
-	if (uri == "/"){
-		finalPath = serverRoot + '/' + server.server.index;
-	}
+	std::string finalPath = getFinalPath(server.server, uri);
 
-	std::vector<std::string> uriTokens = tokenizer(uri, '/');
-	printVector(uriTokens);
-	for (size_t i = 0; i < server.server.locations.size(); i++) {
-		if (server.server.locations[i].path == '/' + uriTokens[0]) {
-			std::cout << "Location found" << std::endl;
-			std::string locationRoot = server.server.locations[i].root;
-			if (locationRoot == "") {
-				finalPath = serverRoot + uri;
-				if (server.server.locations[i].index == "") {
-					
-				}
-			} else {
-				finalPath = locationRoot + uri;
-			}
-			// if (uriTokens.size() == 1) {
-			// 	if (server.server.locations[i].index == "") {
-			// 		finalPath = locationRoot + '/' + server.server.index;
-			// 	} else {
-			// 		finalPath = locationRoot + '/' + server.server.locations[i].index;
-			// 	}
-			// }
-		}
-	}
-	std::cout << finalPath << std::endl;
+	std::cout << "serveFile --- [" <<finalPath << "]\n";
 	fileContent = readFile(finalPath);
 
 	resp.http_version = "1.1";
 	resp.status_code = "200";
 	resp.status_text = "OK";
-	resp.content_type = "image/jpeg";
+	resp.content_type = "text/html";
 	resp.content_length = itos(fileContent.length());
 	resp.date = "2023-09-20T00:31:02.612Z";
 	resp.server = "webserv";

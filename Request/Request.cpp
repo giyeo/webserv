@@ -200,5 +200,4 @@ std::string Request::parsePath(std::string fullPath) const {
 }
 
 Request::~Request() {
-	std::cout << "vazei\n";
 }
