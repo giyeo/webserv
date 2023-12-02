@@ -120,21 +120,19 @@ void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
 	if (bytesRead == 0) {
 		std::cout << "Connection closed by client" << std::endl;
 		epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
+		connectionHeaders.erase(client_socket);
 		close(client_socket);
 	} else if (bytesRead == -1 && errno != EWOULDBLOCK && errno != EAGAIN) {
 		perror("Error receiving data");
 		epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
+		connectionHeaders.erase(client_socket);
 		close(client_socket);
 	}
 
 	if (connectionHeaders[client_socket].totalBytesRead > 0) {
 		std::cout << "Received data: " << connectionHeaders[client_socket].totalBytesRead << " bytes" << std::endl;
-		
-		if(connectionHeaders[client_socket].getContentLength() == connectionHeaders[client_socket].totalBytesRead - connectionHeaders[client_socket].getHeadersLength()) {
-			// std::cout << "contentlength: "<< connectionHeaders[client_socket].getContentLength() << "\n";
-			// std::cout << "totalnow: "<< connectionHeaders[client_socket].totalBytesRead << "\n";
-			// std::cout << "headerslength: " << connectionHeaders[client_socket].getHeadersLength() << "\n";
-			// std::cout << connectionHeaders[client_socket].requestBodyBuffer << '\n';
+		unsigned long sendedRequestedBodySize = connectionHeaders[client_socket].totalBytesRead - connectionHeaders[client_socket].getHeadersLength();
+		if(connectionHeaders[client_socket].getContentLength() == sendedRequestedBodySize) {
 			connectionHeaders[client_socket].parseRequestBody();
 			Resource resource(connectionHeaders[client_socket], client_socket, serverSocket);
 			connectionHeaders.erase(client_socket);

@@ -54,14 +54,13 @@ void Resource::handleCGI(std::string filePath, Request &httpReq, int clientFd) {
 }
 
 void Resource::uploadFile(Request &httpReq, int clientFd) {
-	// httpReq.getHeaderValue("");
 	response_object resp;
-	std::string fileContent = "nice";
+	std::string fileContent = httpReq.requestBodyBuffer;
 
 	resp.http_version = "1.1";
 	resp.status_code = "200";
 	resp.status_text = "OK";
-	resp.content_type = "text/html";
+	resp.content_type = httpReq.getHeaderValue("Content-Type");
 	resp.content_length = itos(fileContent.length());
 	resp.date = "2023-09-20T00:31:02.612Z";
 	resp.server = "webserv";
