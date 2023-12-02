@@ -1,14 +1,63 @@
 #include "Resource.hpp"
 
-void Resource::serveFile(std::string filePath, int clientFd) const {
-	response_object resp;
+#define NOTFOUND 0
+#define FOUND 1
+#define REDIRECT_INDEX 2
+// / [x]
+// /image [ ] 
+// /images/ [ ]
+// /images/1.jpg [ ]
 
-	std::string fileContent = readFile("./_Files/" + filePath);
+
+void printVector(std::vector<std::string> vec) {
+	for (size_t i = 0; i < vec.size(); i++) {
+		std::cout << vec[i] << std::endl;
+	}
+} 
+
+void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) const {
+	response_object resp;
+	std::string serverRoot = server.server.root;
+	std::string uri = httpReq.getPath();
+	std::string fileContent;
+	std::string finalPath;
+	
+	std::cout << "PATH REQUESTED:" << uri << std::endl;
+	
+	if (uri == "/"){
+		finalPath = serverRoot + '/' + server.server.index;
+	}
+
+	std::vector<std::string> uriTokens = tokenizer(uri, '/');
+	printVector(uriTokens);
+	for (size_t i = 0; i < server.server.locations.size(); i++) {
+		if (server.server.locations[i].path == '/' + uriTokens[0]) {
+			std::cout << "Location found" << std::endl;
+			std::string locationRoot = server.server.locations[i].root;
+			if (locationRoot == "") {
+				finalPath = serverRoot + uri;
+				if (server.server.locations[i].index == "") {
+					
+				}
+			} else {
+				finalPath = locationRoot + uri;
+			}
+			// if (uriTokens.size() == 1) {
+			// 	if (server.server.locations[i].index == "") {
+			// 		finalPath = locationRoot + '/' + server.server.index;
+			// 	} else {
+			// 		finalPath = locationRoot + '/' + server.server.locations[i].index;
+			// 	}
+			// }
+		}
+	}
+	std::cout << finalPath << std::endl;
+	fileContent = readFile(finalPath);
 
 	resp.http_version = "1.1";
 	resp.status_code = "200";
 	resp.status_text = "OK";
-	resp.content_type = "text/html";
+	resp.content_type = "image/jpeg";
 	resp.content_length = itos(fileContent.length());
 	resp.date = "2023-09-20T00:31:02.612Z";
 	resp.server = "webserv";
@@ -77,34 +126,24 @@ Resource::Resource(Request &httpReq, int clientFd, SocketHandler &server) {
 
 	//vai ter que fazer para cada server o resource file mapping
 	//root é a pasta raiz.
-	std::cout << server.server.root << "\n" ;
-
-
-	resourceToFileMapping["/"] = "index.html";
-	resourceToFileMapping["/index.html"] = "index.html";
-	resourceToFileMapping["/notFound"] = "notFound.html";
-	resourceToFileMapping["/test.py"] = "test.py";
-	resourceToFileMapping["/files"] = "files.html";
-
 
 	std::string resourcePath = httpReq.getPath();
-	std::cout << resourcePath << "\n";
 	std::string method = httpReq.getMethod();
 
-	if (resourceToFileMapping.find(resourcePath) != resourceToFileMapping.end()) {
-		std::string filePath = resourceToFileMapping[resourcePath];
+	// if (resourceToFileMapping.find(resourcePath) != resourceToFileMapping.end()) {
+		// std::string filePath = resourceToFileMapping[resourcePath];
 
-		if (ft_find(filePath, ".py"))
-			handleCGI(filePath, httpReq, clientFd);
-		else if (method == "GET")
-			serveFile(filePath, clientFd);
-		else if (method == "POST")
-			uploadFile(httpReq, clientFd);
-		else if (method == "DELETE");
-			//TODO alguma coisa;
-	} else {
-		serveFile("notFound.html", clientFd);
-	}
+	// if (ft_find(filePath, ".py"))
+		// handleCGI(filePath, httpReq, clientFd);
+	if (method == "GET")
+		serveFile(httpReq, clientFd, server);
+	else if (method == "POST")
+		uploadFile(httpReq, clientFd);
+	// else if (method == "DELETE");
+	// 		//TODO alguma coisa;
+	// } //else {
+		//serveFile("notFound.html", clientFd, server.server.root);
+	//}
 }
 
 bool Resource::ft_find(std::string str, std::string to_find) const {
