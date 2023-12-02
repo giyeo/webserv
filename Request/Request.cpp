@@ -1,10 +1,33 @@
 #include "Request.hpp"
 
-Request::Request(const char *recv) {
-	requestParser(recv);
+Request::Request() {
+
 }
 
-void Request::requestParser(const char *recv) {
+Request::Request(const char *recv) {
+	parseRequestLineAndHeaders(recv);
+}
+
+void Request::parseRequestBody() {
+	const char *recv = requestBodyBuffer.c_str();
+	contentType = headers["Content-Type"];
+	if (this->method == "POST"
+		&& headers["Content-Type"] == "text/plain"
+		&& this->contentLength != 0)
+		replicateHttpRequestContent(recv);
+}
+
+unsigned long calculateHeadersLength(const char *recv) {
+	const char* contentStart = strstr(recv, "\r\n\r\n");
+	if (!contentStart) {
+		std::cerr << "Invalid HTTP request: no blank line separating headers and body." << std::endl;
+		exit(1);
+	}
+	contentStart += 4;
+	return contentStart - recv;
+}
+
+void Request::parseRequestLineAndHeaders(const char *recv) {
 	std::istringstream iss(recv);
 	std::string line;
 	//PARSE REQUEST LINE
@@ -16,20 +39,8 @@ void Request::requestParser(const char *recv) {
 		if(parseHeaders(splitLine(line, ":")) == 1)
 			break;
 	}
-	contentType = headers["Content-Type"];
-	// std::cout << "---------\n";
-	// std::cout << method << " " << path << " " << contentType << "\n";
-	// std::cout << "---------\n";
-	// printMap(this->pathVariables);
-	// std::cout << "---------\n";
-	// printMap(this->headers);
-	// std::cout << "---------\n";
-	//PARSE REQUEST BODY (TEXT ONLY FOR NOW)
+	this->headersLength = calculateHeadersLength(recv);
 	this->contentLength = atoi(headers["Content-Length"].c_str());
-	if (this->method == "POST"
-		&& headers["Content-Type"] == "text/plain"
-		&& this->contentLength != 0)
-		replicateHttpRequestContent(recv);
 }
 
 void Request::parseRequestLine(std::vector<std::string> token) {
@@ -37,12 +48,16 @@ void Request::parseRequestLine(std::vector<std::string> token) {
 	methods.push_back("GET");
 	methods.push_back("POST");
 	methods.push_back("DELETE");
-	if(token[0].empty() || token[1].empty())
+	if(token[0].empty() || token[1].empty()) {
+		std::cerr << "COULD NOT PARSE REQUEST LINE\n";
 		exit(1); //COULD NOT PARSE REQUEST LINE
+	}
 	if (std::find(methods.begin(), methods.end(), token[0]) != methods.end()) {
 		this->method = token[0];
 		this->path = token[1];
 	} else {
+		std::cout << token[0] << "|\n";
+		std::cerr << "HTTP RESPONSE: NOT IMPLEMENTED\n";
 		exit(1); //HTTP RESPONSE: NOT IMPLEMENTED
 	}
 	pathVariables = parseQueryParameters(path);
@@ -80,20 +95,11 @@ std::vector<std::string> Request::splitLine(std::string line, std::string fline)
 void Request::replicateHttpRequestContent(const char* recv) {
 	// Find the start of the content by searching for the blank line that separates headers and body
 
-	const char* contentStart = strstr(recv, "\r\n\r\n");
-	if (!contentStart) {
-		std::cerr << "Invalid HTTP request: no blank line separating headers and body." << std::endl;
-		return;
-	}
-	contentStart += 4;
+	const char* contentStart = recv + headersLength;
 	std::size_t length = std::char_traits<char>::length(contentStart);
 	std::cout << "content:" << contentLength << ", calculed:" << length << "\n\n";
 	std::vector<char> charVector(contentStart, contentStart + length);
 	this->requestBody = charVector;
-	// for (std::vector<char>::iterator it = charVector.begin(); it != charVector.end(); ++it) {
-	//     std::cout << *it;
-	// }
-	// std::cout << "\n";
 	// Open the output file in binary mode
 	std::ofstream outputFileStream("outputFile.txt", std::ios::binary);
 	if (!outputFileStream) {
@@ -138,6 +144,10 @@ std::map<std::string, std::string> Request::getPathVariables() const {
 
 unsigned long Request::getContentLength() const {
 	return this->contentLength;
+}
+
+unsigned long Request::getHeadersLength() const {
+	return this->headersLength;
 }
 
 std::vector<char> Request::getRequestBody() const {
@@ -187,4 +197,8 @@ std::string Request::parsePath(std::string fullPath) const {
 	if(fullPath.find("?") == fullPath.npos)
 		return fullPath;
 	return fullPath.substr(0,fullPath.find("?"));
+}
+
+Request::~Request() {
+	std::cout << "vazei\n";
 }
