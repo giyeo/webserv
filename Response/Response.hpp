@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <cerrno>
 
 typedef struct s_response {
 	//Status Line
@@ -36,13 +37,13 @@ typedef struct s_response {
 		location(),
 		connection("close"),
 		response_body(),
-		filename("file.txt") {}
+		filename() {}
 }	response_object;
 
 class Response {
 	public:
 		Response(response_object &res);
-		static void notFoundResponse(int fd, std::string serverName);
+		static void notFoundResponse(int fd, std::string serverName, std::string content);
 		std::string toString();
 		void sendResponse(int clientFd);
 	private:

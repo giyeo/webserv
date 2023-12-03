@@ -7,27 +7,27 @@ void Response::sendResponse(int clientFd) {
     const char* buffer = responseString.c_str();
     int size = responseString.size();
 
+	std::cout << buffer << "\n";
     int totalSent = 0;
     while (totalSent < size) {
         int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
         if (bytesSent < 0) {
-            std::cerr << "Error sending response to client" << std::endl;
-            break;
+            std::cerr << "Waiting to send Chunck" << std::endl;
         }
+		sleep(1);
         totalSent += bytesSent;
     }
-    close(clientFd);
 }
 
-void Response::notFoundResponse(int fd, std::string serverName) {
+void Response::notFoundResponse(int fd, std::string serverName, std::string content) {
 	response_object resp;
 
-	resp.http_version = "1.1";
-	resp.status_code = "404";
+	resp.status_code = "200";
 	resp.status_text = "KO";
 	resp.date = __DATE__;
 	resp.server = serverName;
-	resp.connection = "close";
+	resp.content_type = "text/html";
+	resp.response_body = content;
 
 	Response httpRes(resp);
 	httpRes.sendResponse(fd);

@@ -25,7 +25,6 @@ std::string getFinalPath(Server &server, std::string uri) {
 			std::cout << "getFinalPath --- Location found" << std::endl;
 			locationRoot = server.locations[i].root;
 			if (locationRoot.empty()) {
-				std::cout << "getFinalPath ---" << server.locations[i].index << "\n";
 				if (uriTokens.size() == 1 && server.locations[i].index.empty()) 
 					return serverRoot + server.locations[i].path + '/' + server.index;
 				else if (uriTokens.size() == 1 && server.locations[i].index != "") {
@@ -42,7 +41,7 @@ std::string getFinalPath(Server &server, std::string uri) {
 			}
 		}
 	}
-	return serverRoot + "/notFound.html";
+	return "";
 }
 
 std::string getContentType(std::string finalPath) {
@@ -83,10 +82,12 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 	std::string fileContent;
 	std::string finalPath = getFinalPath(server.server, uri);
 	std::string serverName = server.server.serverName[0];
+	std::cout << "serveFile --- [" << finalPath << "]\n";
 
-	std::cout << "serveFile --- [" <<finalPath << "]\n";
-	if((fileContent = readFile(finalPath)) == "") {
-		Response::notFoundResponse(clientFd, serverName);
+	fileContent = readFile(finalPath);
+	if(fileContent == "") {
+		Response::notFoundResponse(clientFd, serverName,
+			readFile(serverRoot + "/notFound.html"));
 		return ;
 	}
 
@@ -98,6 +99,7 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 
 	Response httpRes(resp);
 	httpRes.sendResponse(clientFd);
+	close(clientFd);
 }
 
 void Resource::handleCGI(std::string filePath, Request &httpReq, int clientFd) {
