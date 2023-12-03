@@ -45,25 +45,56 @@ std::string getFinalPath(Server &server, std::string uri) {
 	return serverRoot + "/notFound.html";
 }
 
+std::string getContentType(std::string finalPath) {
+	std::map<std::string, std::string> fileMimeMap;
+	fileMimeMap[".txt"] = "text/plain";
+	fileMimeMap[".html"] = "text/html";
+	fileMimeMap[".css"] = "text/css";
+	fileMimeMap[".json"] = "application/json";
+	fileMimeMap[".xml"] = "application/xml";
+	fileMimeMap[".jpeg"] = "image/jpeg";
+	fileMimeMap[".png"] = "image/png";
+	fileMimeMap[".gif"] = "image/gif";
+	fileMimeMap[".svg"] = "image/svg+xml";
+	fileMimeMap[".mp3"] = "audio/mpeg";
+	fileMimeMap[".wav"] = "audio/wav";
+	fileMimeMap[".mp4"] = "video/mp4";
+	fileMimeMap[".js"] = "text/javascript";
+
+	std::vector<std::string> tokens = tokenizer(finalPath, '.');
+	std::map<std::string, std::string>::iterator it = fileMimeMap.find("." + tokens[1]);
+    if (it != fileMimeMap.end()) {
+        std::cout << "MIME type for " << tokens[1] << ": " << it->second << std::endl;
+		return fileMimeMap[tokens[1]];
+    } else {
+        std::cerr << "Error: File extension " << tokens[1] << "not found in fileMimeMap." << std::endl;
+		return "text/plain";
+    }
+}
+
+std::string getFileName(std::string finalPath) {
+	return tokenizer(finalPath, '/').back();
+}
+
 void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) const {
 	response_object resp;
 	std::string serverRoot = server.server.root;
 	std::string uri = httpReq.getPath();
 	std::string fileContent;
 	std::string finalPath = getFinalPath(server.server, uri);
+	std::string serverName = server.server.serverName[0];
 
 	std::cout << "serveFile --- [" <<finalPath << "]\n";
-	fileContent = readFile(finalPath);
+	if((fileContent = readFile(finalPath)) == "") {
+		Response::notFoundResponse(clientFd, serverName);
+		return ;
+	}
 
-	resp.http_version = "1.1";
-	resp.status_code = "200";
-	resp.status_text = "OK";
-	resp.content_type = "image/jpg";
+	resp.content_type = getContentType(finalPath);
 	resp.content_length = itos(fileContent.length());
-	resp.date = "2023-09-20T00:31:02.612Z";
-	resp.server = "webserv";
-	resp.connection = "close";
+	resp.server = serverName;
 	resp.response_body = fileContent;
+	resp.filename = getFileName(finalPath);
 
 	Response httpRes(resp);
 	httpRes.sendResponse(clientFd);

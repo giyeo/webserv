@@ -1,5 +1,8 @@
 server
 .vscode
 *.o
-*.png
 test
+*.png
+*.jpeg
+*.gif
+*.jpg

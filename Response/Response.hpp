@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-typedef struct {
+typedef struct s_response {
 	//Status Line
 	std::string http_version;
 	std::string status_code;
@@ -21,11 +21,28 @@ typedef struct {
 	std::string connection;
 	//Reponse Body (HTML, JSON, XML, text, binary data, or any other format.)
 	std::string response_body;
+	std::string filename;
+
+	s_response() :
+		http_version("1.1"),
+		status_code("200"),
+		status_text("OK"),
+		content_type(), 
+		content_length(),
+		date(__DATE__),
+		server(), 
+		cache_control(),
+		set_cookie(),
+		location(),
+		connection("close"),
+		response_body(),
+		filename("file.txt") {}
 }	response_object;
 
 class Response {
 	public:
 		Response(response_object &res);
+		static void notFoundResponse(int fd, std::string serverName);
 		std::string toString();
 		void sendResponse(int clientFd);
 	private:

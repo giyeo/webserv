@@ -19,6 +19,19 @@ void Response::sendResponse(int clientFd) {
     close(clientFd);
 }
 
+void Response::notFoundResponse(int fd, std::string serverName) {
+	response_object resp;
+
+	resp.http_version = "1.1";
+	resp.status_code = "404";
+	resp.status_text = "KO";
+	resp.date = __DATE__;
+	resp.server = serverName;
+	resp.connection = "close";
+
+	Response httpRes(resp);
+	httpRes.sendResponse(fd);
+}
 
 std::string Response::toString() {
 	std::string response = "";
@@ -36,6 +49,7 @@ std::string Response::toString() {
 	.append((!res.set_cookie.empty()) ? std::string("Set-Cookie: ").append(res.set_cookie).append("\n") : "")
 	.append((!res.location.empty()) ? std::string("Location: ").append(res.location).append("\n") : "")
 	.append((!res.connection.empty()) ? std::string("Connection: ").append(res.connection).append("\n") : "")
+	.append((!res.filename.empty()) ? std::string("Content-Disposition: attachment; filename=").append(res.filename).append("\n") : "")
 	//Reponse Body (HTML, JSON, XML, text, binary data, or any other format.)
 	.append("\n")
 	.append((!res.response_body.empty()) ? res.response_body.append("\n") : "");
