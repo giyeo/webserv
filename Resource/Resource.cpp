@@ -34,9 +34,9 @@ std::string getFinalPath(Server &server, std::string uri) {
 				return serverRoot + uri;
 			} else {
 				if (uriTokens.size() == 1 && server.locations[i].index == "")
-					return locationRoot + '/' + server.index;
+					return locationRoot + server.locations[i].path +'/' + server.index;
 				else if (uriTokens.size() == 1 && server.locations[i].index != "")
-					return locationRoot + '/' + server.locations[i].index;
+					return locationRoot + server.locations[i].path + '/' + server.locations[i].index;
 				return locationRoot + uri;
 			}
 		}
