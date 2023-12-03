@@ -8,6 +8,14 @@
 // /images/ [ ]
 // /images/1.jpg [ ]
 
+bool isValidURI(std::vector<std::string> pathTokens, std::vector<std::string> uriTokens) {
+	for (size_t i = 0; i < pathTokens.size(); i++) {
+		if(pathTokens[i] != uriTokens[i])
+			return false;
+	}
+	return true;
+}
+
 std::string getFinalPath(Server &server, std::string uri) {
 	std::string finalPath;
 	std::string serverRoot = server.root;
@@ -21,23 +29,22 @@ std::string getFinalPath(Server &server, std::string uri) {
 	// printVector(uriTokens);
 	// TODO: check if is needed to put server.locations[i].path == '/' + uriTokens[0] in the ifs
 	for (size_t i = 0; i < server.locations.size(); i++) {
-		std::cout << "d^^^^^^^^^^^^^^^^" << server.locations[i].path << '/' + uriTokens[0] << '\n';
-		
-		if (server.locations[i].path == '/' + uriTokens[0]) {
+		std::vector<std::string> pathTokens = tokenizer(server.locations[i].path, '/');
+		if (isValidURI(pathTokens, uriTokens)) {
 			std::cout << "getFinalPath --- Location found" << std::endl;
 			locationRoot = server.locations[i].root;
 			if (locationRoot.empty()) {
-				if (uriTokens.size() == 1 && server.locations[i].index.empty()) 
+				if (uriTokens.size() == pathTokens.size() && server.locations[i].index.empty()) 
 					return serverRoot + server.locations[i].path + '/' + server.index;
-				else if (uriTokens.size() == 1 && server.locations[i].index != "") {
+				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "") {
 					std::cout << "returning: " << serverRoot +  server.locations[i].path + '/' + server.locations[i].index << "\n";
 					return serverRoot + server.locations[i].path +  '/' + server.locations[i].index;
 				}
 				return serverRoot + uri;
 			} else {
-				if (uriTokens.size() == 1 && server.locations[i].index == "")
+				if (uriTokens.size() == pathTokens.size() && server.locations[i].index == "")
 					return locationRoot + server.locations[i].path +'/' + server.index;
-				else if (uriTokens.size() == 1 && server.locations[i].index != "")
+				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "")
 					return locationRoot + server.locations[i].path + '/' + server.locations[i].index;
 				return locationRoot + uri;
 			}
