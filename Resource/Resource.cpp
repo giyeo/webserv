@@ -21,6 +21,8 @@ std::string getFinalPath(Server &server, std::string uri) {
 	// printVector(uriTokens);
 	// TODO: check if is needed to put server.locations[i].path == '/' + uriTokens[0] in the ifs
 	for (size_t i = 0; i < server.locations.size(); i++) {
+		std::cout << "d^^^^^^^^^^^^^^^^" << server.locations[i].path << '/' + uriTokens[0] << '\n';
+		
 		if (server.locations[i].path == '/' + uriTokens[0]) {
 			std::cout << "getFinalPath --- Location found" << std::endl;
 			locationRoot = server.locations[i].root;

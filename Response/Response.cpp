@@ -3,20 +3,21 @@
 Response::Response(response_object &res): res(res) {}
 
 void Response::sendResponse(int clientFd) {
-    std::string responseString = toString();
-    const char* buffer = responseString.c_str();
-    int size = responseString.size();
+	std::string responseString = toString();
+	const char* buffer = responseString.c_str();
+	int size = responseString.size();
 
 	std::cout << buffer << "\n";
-    int totalSent = 0;
-    while (totalSent < size) {
-        int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
-        if (bytesSent < 0) {
-            std::cerr << "Waiting to send Chunck" << std::endl;
-        }
-		sleep(1);
-        totalSent += bytesSent;
-    }
+	int totalSent = 0;
+	while (totalSent < size) {
+		int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
+		if (bytesSent < 0) {
+			std::cerr << "Waiting to send Chunck" << std::endl;
+		}
+		sleep(1); //TODO that blocks the sending, we should try to add this guy to a
+		//being sended list, storing the fd, responseString and bytes send
+		totalSent += bytesSent;
+	}
 }
 
 void Response::notFoundResponse(int fd, std::string serverName, std::string content) {
