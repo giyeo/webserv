@@ -9,7 +9,7 @@ void Location::parseRoot(std::string value){
 	this->root = value;
 }
 
-void Location::parseIndex(std::string value){
+void Location::parseIndex(std::string value) {
 	this->index = value;
 }
 
@@ -37,18 +37,19 @@ void Location::dispatcher(std::string key, std::string value) {
 	names.push_back("index");
 	names.push_back("error_page");
 	names.push_back("proxy_pass");
+	// names.push_back("try_files"); TODO: implement try files 
 
 	std::vector<MemberFunction> functionPointers;
     functionPointers.push_back(&Location::parseRoot);
     functionPointers.push_back(&Location::parseIndex);
     functionPointers.push_back(&Location::parseErrorPage);
 	functionPointers.push_back(&Location::parseProxyPass);
+	// functionPOinters.push_back(&Location::parseTryFiles); TODO implement try files
 	
 	if(names.size() != functionPointers.size()) {
 		std::cout << "diferent sizes in dispatcher\n";
 		return ;
 	}
-	
 	for(size_t i = 0; i < names.size(); i++) {
 		try {
 			if(names[i].compare(key) == 0) {

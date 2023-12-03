@@ -8,13 +8,6 @@
 // /images/ [ ]
 // /images/1.jpg [ ]
 
-
-void printVector(std::vector<std::string> vec) {
-	for (size_t i = 0; i < vec.size(); i++) {
-		std::cout << vec[i] << std::endl;
-	}
-} 
-
 std::string getFinalPath(Server &server, std::string uri) {
 	std::string finalPath;
 	std::string serverRoot = server.root;
@@ -26,16 +19,19 @@ std::string getFinalPath(Server &server, std::string uri) {
 	std::vector<std::string> uriTokens = tokenizer(uri, '/');
 
 	// printVector(uriTokens);
+	// TODO: check if is needed to put server.locations[i].path == '/' + uriTokens[0] in the ifs
 	for (size_t i = 0; i < server.locations.size(); i++) {
 		if (server.locations[i].path == '/' + uriTokens[0]) {
 			std::cout << "getFinalPath --- Location found" << std::endl;
 			locationRoot = server.locations[i].root;
 			if (locationRoot.empty()) {
 				std::cout << "getFinalPath ---" << server.locations[i].index << "\n";
-				if (uriTokens.size() == 1 && server.locations[i].index.empty())//TODO locations[i].index not parsing
-					return serverRoot + '/' + server.index;
-				else if (uriTokens.size() == 1 && server.locations[i].index != "")
-					return serverRoot + '/' + server.locations[i].index;
+				if (uriTokens.size() == 1 && server.locations[i].index.empty()) 
+					return serverRoot + server.locations[i].path + '/' + server.index;
+				else if (uriTokens.size() == 1 && server.locations[i].index != "") {
+					std::cout << "returning: " << serverRoot +  server.locations[i].path + '/' + server.locations[i].index << "\n";
+					return serverRoot + server.locations[i].path +  '/' + server.locations[i].index;
+				}
 				return serverRoot + uri;
 			} else {
 				if (uriTokens.size() == 1 && server.locations[i].index == "")
@@ -62,7 +58,7 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 	resp.http_version = "1.1";
 	resp.status_code = "200";
 	resp.status_text = "OK";
-	resp.content_type = "text/html";
+	resp.content_type = "image/jpg";
 	resp.content_length = itos(fileContent.length());
 	resp.date = "2023-09-20T00:31:02.612Z";
 	resp.server = "webserv";

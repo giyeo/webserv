@@ -110,3 +110,9 @@ std::vector<std::string> myPushBack(int count, ...) {
 	va_end(args);
 	return names;
 }
+
+void printVector(std::vector<std::string> vec) {
+	for (size_t i = 0; i < vec.size(); i++) {
+		std::cout << vec[i] << std::endl;
+	}
+} 

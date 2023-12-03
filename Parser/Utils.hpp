@@ -20,5 +20,6 @@ std::vector<std::string> extractAndRemoveBracesContent(std::string& input);
 void error(int line, std::string des);
 std::string readFile(std::string filePath);
 std::vector<std::string> myPushBack(int count, ...);
+void printVector(std::vector<std::string> vector);
 
 #endif

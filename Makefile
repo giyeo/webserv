@@ -2,7 +2,7 @@
 CXX = g++
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++98
+CXXFLAGS = -Wall -Wextra -std=c++98 
 
 # Source files and output executable
 SRCS =	main.cpp \
@@ -49,8 +49,10 @@ $(TEST_TARGET): $(TEST_OBJS)
 clean:
 	rm -f $(TARGET)
 
+re: clean all
+
 minunit: $(MINUNIT_SRCS_FILES)
-	$(CXX) $(CXXFLAGS) $(MINUNIT_SRCS_FILES) -o $(TEST) 
-	./$(TEST)
-	rm -f $(TEST)
+	$(CXX) $(CXXFLAGS) $(MINUNIT_SRCS_FILES) -o $(TEST_TARGET)
+	./$(TEST_TARGET)
+	rm -f $(TEST_TARGET)
 	rm -f $(TARGET) $(TEST_TARGET) $(OBJS) $(TEST_OBJS)

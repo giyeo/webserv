@@ -57,10 +57,17 @@ void Server::parseLocation(std::string path, std::string value) {
 	std::string argument;
 
 	location.path = path;
-	
+
 	while (getline(ss, line)) {
 		std::vector<std::string> line_tokens = tokenizer(line, ' ');
 
+		for (size_t i = 0; i < line_tokens.size(); i++) {
+			int j = 0;
+			while (line_tokens[i][j] == ' ' || line_tokens[i][j] == '\t') {
+				j++;
+			}
+			line_tokens[i] = line_tokens[i].substr(j);
+		}
 		directive = line_tokens[0];
 		while(line_tokens.size() > 1) {
 			argument += line_tokens[1];
