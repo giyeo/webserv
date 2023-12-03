@@ -63,21 +63,19 @@ std::string getContentType(std::string finalPath) {
 	fileMimeMap[".jpeg"] = "image/jpeg";
 	fileMimeMap[".png"] = "image/png";
 	fileMimeMap[".gif"] = "image/gif";
-	fileMimeMap[".svg"] = "image/svg+xml";
 	fileMimeMap[".mp3"] = "audio/mpeg";
-	fileMimeMap[".wav"] = "audio/wav";
 	fileMimeMap[".mp4"] = "video/mp4";
 	fileMimeMap[".js"] = "text/javascript";
 
 	std::vector<std::string> tokens = tokenizer(finalPath, '.');
 	std::map<std::string, std::string>::iterator it = fileMimeMap.find("." + tokens[1]);
-    if (it != fileMimeMap.end()) {
-        std::cout << "MIME type for " << tokens[1] << ": " << it->second << std::endl;
+	if (it != fileMimeMap.end()) {
+		std::cout << "MIME type for " << tokens[1] << ": " << it->second << std::endl;
 		return fileMimeMap[tokens[1]];
-    } else {
-        std::cerr << "Error: File extension " << tokens[1] << "not found in fileMimeMap." << std::endl;
+	} else {
+		std::cerr << "Error: File extension " << tokens[1] << "not found in fileMimeMap." << std::endl;
 		return "text/plain";
-    }
+	}
 }
 
 std::string getFileName(std::string finalPath) {
@@ -104,7 +102,8 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 	resp.content_length = itos(fileContent.length());
 	resp.server = serverName;
 	resp.response_body = fileContent;
-	resp.filename = getFileName(finalPath);
+	if(resp.content_type == "video/mp4" || resp.content_type == "audio/mp3")
+		resp.filename = getFileName(finalPath);
 
 	Response httpRes(resp);
 	httpRes.sendResponse(clientFd);
