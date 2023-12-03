@@ -12,7 +12,8 @@ void Server::parseServerName(std::string value){
 void Server::parseListen(std::string value){
 	for(size_t i = 0; i < value.size(); i++) {
 		if(!isdigit(value[i]) && value[i] != '.' && value[i] != ':') {
-			throw std::invalid_argument("Invalid listen value");
+			std::cerr << "Invalid listen value" << std::endl;
+			exit(EXIT_FAILURE);
 		}
 	}
 	this->listen = value;
@@ -20,8 +21,10 @@ void Server::parseListen(std::string value){
 
 void Server::parseRoot(std::string value){
 	std::vector<std::string> tokens = tokenizer(value, ' ');
-	if(tokens.size() != 1)
-		throw std::invalid_argument("Invalid number of arguments in a \"root\" directive");
+	if(tokens.size() != 1) {
+		std::cerr << "Invalid number of arguments in a \"root\" directive" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	this->root = value;
 }
 
@@ -29,21 +32,18 @@ void Server::parseIndex(std::string value){
 	this->index = value;
 }
 
-// In case of invalid error page, nginx behavior is redirect to a inexistent page.
-// I prefer throw an exception instead.
-void Server::parseErrorPage(std::string value){
+void Server::parseErrorPage(std::string value) {
 	std::vector<std::string> tokens = tokenizer(value, ' ');
 
-	std::string error_page = tokens.back();
-	if(access(error_page.c_str(), R_OK) != 0)
-		throw std::invalid_argument("Invalid error_page value");
-	this->errorPage = error_page;
+	std::string errorPage = tokens.back();
+	this->errorPage = errorPage;
 }
 
 void Server::parseClientMaxBodySize(std::string value){
 	for (size_t i = 0; i < value.size(); i++) {
 		if(isdigit(value[i]) == 0) {
-			throw std::invalid_argument("Invalid client_max_body_size value");
+			std::cerr << "Invalid client_max_body_size value" << std::endl;
+			exit(EXIT_FAILURE);
 		}
 	}
 	this->clientMaxBodySize = value;
@@ -58,28 +58,20 @@ void Server::parseLocation(std::string path, std::string value) {
 
 	location.path = path;
 
-	while (getline(ss, line)) {
-		std::vector<std::string> line_tokens = tokenizer(line, ' ');
+	while (getline(ss, line, ';')) {
+		std::vector<std::string> line_tokens = tokenizer(line, ':');
 
-		for (size_t i = 0; i < line_tokens.size(); i++) {
-			int j = 0;
-			while (line_tokens[i][j] == ' ' || line_tokens[i][j] == '\t') {
-				j++;
-			}
-			line_tokens[i] = line_tokens[i].substr(j);
+		if (line_tokens.size() == 1) {
+			std::cerr << "invalid value for directive " << line_tokens[0] << std::endl;
+			exit(1);
 		}
+		line_tokens[0] = trimString(line_tokens[0]);
 		directive = line_tokens[0];
-		while(line_tokens.size() > 1) {
-			argument += line_tokens[1];
-			if(line_tokens.size() > 2)
-				argument += " ";
-			line_tokens.erase(line_tokens.begin() + 1);
-		}
-		location.dispatcher(directive, argument);
-		directive.clear();
-		argument.clear();
+		argument = line_tokens[1];
 	}
-
+	location.dispatcher(directive, argument);
+	directive.clear();
+	argument.clear();
 	this->locations.push_back(location);
 }
 

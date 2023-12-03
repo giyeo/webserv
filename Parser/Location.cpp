@@ -4,8 +4,10 @@
 
 void Location::parseRoot(std::string value){
 	std::vector<std::string> tokens = tokenizer(value, ' ');
-	if(tokens.size() != 1)
-		throw std::invalid_argument("Invalid number of arguments in a \"root\" directive");
+	if(tokens.size() != 1) {
+		std::cerr << "Invalid number of arguments in a \"root\" directive" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	this->root = value;
 }
 
@@ -13,16 +15,11 @@ void Location::parseIndex(std::string value) {
 	this->index = value;
 }
 
-// In case of invalid error page, nginx behavior is redirect to a inexistent page.
-// I prefer throw an exception instead.
-// TODO: test case in that can be more than one page for error status code like 404 error404.html 500 error500.html
-void Location::parseErrorPage(std::string value){
+void Location::parseErrorPage(std::string value) {
 	std::vector<std::string> tokens = tokenizer(value, ' ');
 
-	std::string error_page = tokens.back();
-	if(access(error_page.c_str(), R_OK) != 0)
-		throw std::invalid_argument("Invalid error_page value");
-	this->errorPage = value;
+	std::string errorPage = tokens.back();
+	this->errorPage = errorPage;
 }
 
 void Location::parseProxyPass(std::string value) {
