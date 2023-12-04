@@ -1,6 +1,8 @@
 #include "Server.hpp"
 
-Server::Server() : clientMaxBodySize("8196"){}
+Server::Server() : clientMaxBodySize("8196") {
+	serverName.push_back("default");
+}
 Server::~Server() {}
 
 void Server::parseServerName(std::string value){
@@ -56,7 +58,6 @@ void Server::parseLocation(std::string path, std::string value) {
 	std::string argument;
 
 	location.path = path;
-	std::cout << value << '\n';
 	while (getline(ss, line, ';')) {
 		std::vector<std::string> line_tokens = tokenizer(line, ':');
 		

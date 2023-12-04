@@ -131,6 +131,7 @@ void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
 		// std::cout << connectionHeaders[client_socket].requestBodyBuffer << '\n';
 		unsigned long sendedRequestedBodySize = connectionHeaders[client_socket].totalBytesRead - connectionHeaders[client_socket].getHeadersLength();
 		if(connectionHeaders[client_socket].getContentLength() == sendedRequestedBodySize) {
+			log(__FILE__, __LINE__, "Data fully Received", LOG);
 			if(connectionHeaders[client_socket].parseRequestBody(client_socket, serverSocket.server.serverName[0]))
 				Resource resource(connectionHeaders[client_socket], client_socket, serverSocket, connectionHeaders);
 			epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
@@ -182,6 +183,15 @@ void createEventPoll(std::vector<SocketHandler> &serversSockets) {
 	close(epollFd);
 }
 
+void verifyServers(std::vector<Server> &servers) {
+	for(size_t i = 0; i < servers.size(); i++) {
+		if(servers[i].listen.empty())
+			log(__FILE__, __LINE__, "Server must have listen directive", ERROR);
+		if(servers[i].root.empty())
+			log(__FILE__, __LINE__, "Server must have root directive", ERROR);
+	}
+}
+
 int main(int argc, char **argv) {
 	if(argc != 2) {
 		std::cout << "Must have one argument only, example: ./server webserv.conf\n";
@@ -191,6 +201,7 @@ int main(int argc, char **argv) {
 	log(__FILE__,__LINE__,"Server Started", LOG);
 	std::vector<Server> servers = configurationParser(argv[1]);
 	log(__FILE__,__LINE__,"Configuration Parsed", LOG);
+	verifyServers(servers);
 	std::vector<SocketHandler> serverSockets;
 	for(size_t i = 0; i < servers.size(); i++) {
 		SocketHandler server_socket(servers[i]);

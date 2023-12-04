@@ -42,9 +42,11 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 
 	log(__FILE__, __LINE__, concat(2,"Requested URI:",uri.c_str()), LOG);
 
-	if (uri == "/")
-		return returnFinalPath(serverRoot + '/' + server.index, "", server.root + '/' + server.errorPage);
-
+	if (uri == "/") {
+		std::string indx = (server.index.empty()) ? "index.html" : '/' + server.index;
+		std::string err = (server.errorPage.empty()) ? "" : '/' + server.errorPage;
+		return returnFinalPath(serverRoot + indx, "", err);
+	}
 	// printVector(uriTokens);
 	// TODO: check if is needed to put server.locations[i].path == '/' + uriTokens[0] in the ifs
 
@@ -74,7 +76,7 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 	}
 	log(__FILE__,__LINE__,concat(5, "default root:",server.root.c_str(),uri.c_str()," Error Page:",server.errorPage.c_str()), LOG);
 	return returnFinalPath(server.root + uri, "", "/" + server.errorPage);
-} 
+}
 
 std::string getContentType(std::string finalPath) {
 	std::map<std::string, std::string> fileMimeMap;
@@ -200,7 +202,7 @@ void Resource::uploadFile(Request &httpReq, int clientFd) {
 }
 
 Resource::Resource(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
-
+	log(__FILE__,__LINE__,"Dispaching Resource", LOG);
 	std::string resourcePath = httpReq.getPath();
 	std::string method = httpReq.getMethod();
 

@@ -39,7 +39,6 @@ class MyTests(unittest.TestCase):
 		response = requests.get("http://localhost:8082/location/")
 		headers = dict(response.headers)
 		
-		print(response.text)
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(headers.get("Server"),"example.com")
 		self.assertTrue("locationtest2index" in response.text)

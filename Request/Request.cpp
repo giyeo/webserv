@@ -1,10 +1,10 @@
 #include "Request.hpp"
 
-Request::Request() : totalBytesRead(0) {
+Request::Request() : totalBytesRead(0),  headersLength(0), contentLength(0) {
 
 }
 
-Request::Request(const char *recv, size_t maxBodySize) : totalBytesRead(0), maxBodySize(maxBodySize) {
+Request::Request(const char *recv, size_t maxBodySize) : totalBytesRead(0), headersLength(0), contentLength(0) , maxBodySize(maxBodySize){
 	parseRequestLineAndHeaders(recv);
 }
 
