@@ -4,6 +4,8 @@
 #define FOUND 1
 #define REDIRECT_INDEX 2
 
+std::string defaultErrorPageVar = "/home/giyeo/webserv/webserv/defaultErrorPage.html";
+
 typedef struct s_finalPath {
 	std::string finalPath;
 	std::string locationErrorPage;
@@ -14,13 +16,12 @@ typedef struct s_finalPath {
 		finalPath(),
 		locationErrorPage(),
 		serverErrorPage(),
-		defaultErrorPage("defaultErrorPage.html")
+		defaultErrorPage(defaultErrorPageVar)
 	{}
 } t_finalPath;
 
 bool isValidURI(std::vector<std::string> pathTokens, std::vector<std::string> uriTokens) {
 	for (size_t i = 0; i < pathTokens.size(); i++) {
-		std::cout << pathTokens[i] << " " << uriTokens[i] << "\n";
 		if(pathTokens[i] != uriTokens[i])
 			return false;
 	}
@@ -43,10 +44,11 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 	log(__FILE__, __LINE__, concat(2,"Requested URI:",uri.c_str()), LOG);
 
 	if (uri == "/") {
-		std::string indx = (server.index.empty()) ? "index.html" : '/' + server.index;
+		std::string indx = (server.index.empty()) ? "/index.html" : '/' + server.index;
 		std::string err = (server.errorPage.empty()) ? "" : '/' + server.errorPage;
 		return returnFinalPath(serverRoot + indx, "", err);
-	}
+	} else if (uri == defaultErrorPageVar)
+		return returnFinalPath(defaultErrorPageVar, "", "");
 	// printVector(uriTokens);
 	// TODO: check if is needed to put server.locations[i].path == '/' + uriTokens[0] in the ifs
 
@@ -54,10 +56,8 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 	for (size_t i = 0; i < server.locations.size(); i++) {
 		std::vector<std::string> pathTokens = tokenizer(server.locations[i].path, '/');
 		if (isValidURI(pathTokens, uriTokens)) {
-			std::cout << "Location found, root:" << server.locations[i].root << std::endl;
 			locationRoot = server.locations[i].root;
 			if (locationRoot == "") {
-				std::cout << uriTokens.size() << pathTokens.size() << server.locations[i].index << '\n';
 				if (uriTokens.size() == pathTokens.size() && server.locations[i].index.empty())
 					return returnFinalPath(serverRoot + server.locations[i].path + '/' + server.index, server.locations[i].errorPage, server.errorPage);
 				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "") {
@@ -129,7 +129,7 @@ int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, s
 			pathErrorPage = finalPath.locationErrorPage;
 		else if (finalPath.serverErrorPage != "")
 			pathErrorPage = finalPath.serverErrorPage;
-		else 
+		else
 			pathErrorPage = finalPath.defaultErrorPage;
 		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
 		connections.erase(clientFd);

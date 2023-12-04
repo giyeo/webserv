@@ -1,4 +1,3 @@
-import json
 import requests
 import unittest
 
@@ -43,7 +42,6 @@ class MyTests(unittest.TestCase):
 		self.assertEqual(headers.get("Server"),"example.com")
 		self.assertTrue("locationtest2index" in response.text)
 
-		
 	def test2GetLocationError(self):
 		response = requests.get("http://localhost:8082/location/nonexist")
 		headers = dict(response.headers)
@@ -53,21 +51,3 @@ class MyTests(unittest.TestCase):
 		self.assertTrue("locationtest2error" in response.text)
 		
 unittest.main()
-
-# try:
-# 	# Make a GET request
-# 	response = httpx.get(url)
-
-# 	# Check the response status code
-# 	if response.status_code == 200:
-# 		print(f"Request was successful (Status Code: {response.status_code})")
-# 		# Process the response content if needed
-# 		print(response.text)
-# 	else:
-# 		print(f"Request failed with Status Code: {response.status_code}")
-# 		print(response.text)
-
-# except httpx.RequestError as e:
-# 	print(f"Request error: {e}")
-# except httpx.HTTPError as e:
-# 	print(f"HTTP error: {e}")
