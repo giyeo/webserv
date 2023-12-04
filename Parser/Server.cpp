@@ -1,8 +1,7 @@
 #include "Server.hpp"
 
-Server::Server() {}
+Server::Server() : clientMaxBodySize("8196"){}
 Server::~Server() {}
-
 
 void Server::parseServerName(std::string value){
 	std::vector<std::string> server_names = tokenizer(value, ' ');

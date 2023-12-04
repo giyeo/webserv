@@ -11,14 +11,16 @@
 #include <algorithm>
 #include <fstream>
 #include <vector>
+#include "../Parser/Utils.hpp"
+#include "../Response/Response.hpp"
 
 class Request {
 	public:
 		Request();
-		Request(const char *recv);
+		Request(const char *recv, size_t maxBodySize);
 		~Request();
 		void parseRequestLineAndHeaders(const char *recv);
-		void parseRequestBody(void);
+		bool parseRequestBody(int clientFd, std::string serverName);
 
 		std::string getMethod() const;
 		std::string getPath() const;
@@ -51,6 +53,7 @@ class Request {
 		unsigned long contentLength;
 		std::map<std::string, std::string> pathVariables;
 		std::map<std::string, std::string> headers;
+		size_t maxBodySize;
 };
 
 #endif

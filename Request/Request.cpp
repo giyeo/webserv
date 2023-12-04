@@ -1,20 +1,28 @@
 #include "Request.hpp"
 
-Request::Request() {
+Request::Request() : totalBytesRead(0) {
 
 }
 
-Request::Request(const char *recv) {
+Request::Request(const char *recv, size_t maxBodySize) : totalBytesRead(0), maxBodySize(maxBodySize) {
 	parseRequestLineAndHeaders(recv);
 }
 
-void Request::parseRequestBody() {
+bool Request::parseRequestBody(int clientFd, std::string serverName) {
 	const char *recv = requestBodyBuffer.c_str();
+	contentLength = headersLength["Content-Length"];
+	if(contentLength > maxBodySize) {
+		log(__FILE__, __LINE__, "maxBodySizeError", WARNING);
+		Response::maxBodySizeResponse(clientFd, serverName, maxBodySize);
+		return false;
+	}
+
 	contentType = headers["Content-Type"];
 	if (this->method == "POST"
 		&& headers["Content-Type"] == "text/plain"
 		&& this->contentLength != 0)
 		replicateHttpRequestContent(recv);
+	return true;
 }
 
 unsigned long calculateHeadersLength(const char *recv) {

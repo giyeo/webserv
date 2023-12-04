@@ -1,5 +1,66 @@
 #include "Utils.hpp"
 
+std::string final;
+
+#include <iostream>
+#include <sstream>
+
+std::string intToString(int value) {
+    std::stringstream ss;
+    ss << value;
+    return ss.str();
+}
+
+const char* concat(int count, ...) {
+	// Initialize va_list
+	final = "";
+	va_list args;
+	va_start(args, count);
+
+	// Process each argument
+	for (int i = 0; i < count; ++i) {
+		// Access the current argument using va_arg
+		final.append(va_arg(args, const char*));
+	}
+	// Clean up va_list
+	va_end(args);
+	return final.c_str();
+}
+
+void log(const char *file, int line, const char *description, LogLevel level) {
+    std::string colorCode;
+    
+    // Choose color based on log level
+    switch (level) {
+        case LOG:
+            colorCode = GREEN;
+            break;
+        case WARNING:
+            colorCode = YELLOW;
+            break;
+        case ERROR:
+            colorCode = RED;
+            break;
+		case LOGBLUE:
+            colorCode = BLUE;
+            break;
+        default:
+            colorCode = RESET;
+            break;
+    }
+    // Print log with color
+	std::string fileAndLine;
+	fileAndLine.append(file);
+	fileAndLine.append(":");
+	fileAndLine.append(intToString(line));
+	if(colorCode == BLUE)
+		std::cout << "\n\n\n\n\n\n\n"<< __TIMESTAMP__ << '\n';
+    std::cout << colorCode << std::setw(30) << std::left <<  fileAndLine << " | " << description << RESET << "\n";
+	description = "";
+	if(level == ERROR)
+		exit(1);
+}
+
 void error(int line, std::string des) {
 	std::cout << "Error! line:" << line << " " << des << "\n";
 	exit(1);

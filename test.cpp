@@ -10,7 +10,7 @@ char* readFileBinary(const char* filename);
 std::string simpleGetParserTest() {
     std::string file = readFile(__FUNCTION__);
     assert(!file.empty());
-    Request req(file.c_str());
+    Request req(file.c_str(), 10000);
     assert(req.getMethod() == "GET");
     assert(req.getPath() == "/index.html");
     return __FUNCTION__;
@@ -19,7 +19,7 @@ std::string simpleGetParserTest() {
 std::string getWithPathVariables() {
     std::string file = readFile(__FUNCTION__);
     assert(!file.empty());
-    Request req(file.c_str());
+    Request req(file.c_str(),10000);
     assert(req.getMethod() == "GET");
     assert(req.getPath() == "/index.html");
     assert(!req.getPathVariables()["name"].compare("caio"));
@@ -30,7 +30,7 @@ std::string getWithPathVariables() {
 std::string getWithSomeHeaders() {
     std::string file = readFile(__FUNCTION__);
     assert(!file.empty());
-    Request req(file.c_str());
+    Request req(file.c_str(), 10000);
     assert(req.getMethod() == "GET");
     assert(req.getPath() == "/index.html");
     assert(!req.getHeaders()["Authorization"].compare("Bearer"));
@@ -41,7 +41,7 @@ std::string getWithSomeHeaders() {
 std::string postWithFile() {
 	std::string file = readFile(__FUNCTION__);
 	assert(!file.empty());
-    Request req(file.c_str());
+    Request req(file.c_str(), 10000);
     assert(req.getMethod() == "POST");
     assert(req.getPath() == "/index.html");
 	assert(!req.getRequestBody().empty());

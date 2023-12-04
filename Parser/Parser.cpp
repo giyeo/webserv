@@ -90,10 +90,8 @@ std::vector<Server> configurationParser(char *argv) {
 	
 	for(size_t i = 0; i < parsedServers.size(); i++) {
 		if(parsedServers[i].empty() || allblank(0, parsedServers[i].size(), parsedServers[i], false))
-			error(__LINE__, "empty server configuration");
-
+			log(__FILE__,__LINE__,"Empty server configuration", ERROR);
 		servers.push_back(parseServerDirectives(parsedServers[i]));
-		std::cout << "SUCCESS!\n";
 	}
 	return servers;
 }

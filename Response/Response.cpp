@@ -7,12 +7,11 @@ void Response::sendResponse(int clientFd) {
 	const char* buffer = responseString.c_str();
 	int size = responseString.size();
 
-	std::cout << buffer << "\n";
 	int totalSent = 0;
 	while (totalSent < size) {
 		int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
 		if (bytesSent < 0) {
-			std::cerr << "Waiting to send Chunck" << std::endl;
+			std::cerr << "Waiting to send Chunk" << std::endl;
 		}
 		sleep(1); //TODO that blocks the sending, we should try to add this guy to a
 		//being sended list, storing the fd, responseString and bytes send
@@ -20,15 +19,28 @@ void Response::sendResponse(int clientFd) {
 	}
 }
 
-void Response::notFoundResponse(int fd, std::string serverName, std::string content) {
+void Response::notFoundResponse(int fd, std::string serverName, std::string path) {
 	response_object resp;
 
-	resp.status_code = "200";
-	resp.status_text = "KO";
+	resp.status_code = "302";
+	resp.status_text = "Moved Temporarily";
 	resp.date = __DATE__;
 	resp.server = serverName;
 	resp.content_type = "text/html";
-	resp.response_body = content;
+	resp.location = path;
+
+	Response httpRes(resp);
+	httpRes.sendResponse(fd);
+}
+
+void Response::maxBodySizeResponse(int fd, std::string serverName, size_t size) {
+	response_object resp;
+
+	resp.status_code = "413";
+	resp.status_text = "Request Entity Too Large: " + size;
+	resp.date = __DATE__;
+	resp.server = serverName;
+	resp.content_type = "text/plain";
 
 	Response httpRes(resp);
 	httpRes.sendResponse(fd);

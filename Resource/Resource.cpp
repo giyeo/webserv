@@ -38,7 +38,9 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 	std::string finalPath;
 	std::string serverRoot = server.root;
 	std::string locationRoot;
-	std::cout << "getFinalPath --- PATH REQUESTED:" << uri << std::endl;
+
+	log(__FILE__, __LINE__, concat(2,"Requested URI:",uri.c_str()), LOG);
+
 	if (uri == "/")
 		return returnFinalPath(serverRoot + '/' + server.index, "", server.root + '/' + server.errorPage);
 
@@ -49,28 +51,29 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 	for (size_t i = 0; i < server.locations.size(); i++) {
 		std::vector<std::string> pathTokens = tokenizer(server.locations[i].path, '/');
 		if (isValidURI(pathTokens, uriTokens)) {
-			std::cout << "getFinalPath --- Location found" << std::endl;
+			std::cout << "getFinalPath --- Location found, root:" << server.locations[i].root << std::endl;
 			locationRoot = server.locations[i].root;
-			if (locationRoot.empty()) {
+			if (locationRoot == "") {
+				std::cout << uriTokens.size() << pathTokens.size() << server.locations[i].index << '\n';
 				if (uriTokens.size() == pathTokens.size() && server.locations[i].index.empty()) {
 					
-					return returnFinalPath(serverRoot + server.locations[i].path + '/' + server.index, server.locations[i].errorPage, server.root + '/' + server.errorPage);
-				} 
+					return returnFinalPath(serverRoot + server.locations[i].path + '/' + server.index, server.locations[i].errorPage, server.errorPage);
+				}
 				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "") {
 					std::cout << "returning: " << serverRoot +  server.locations[i].path + '/' + server.locations[i].index << "\n";
-					return returnFinalPath(serverRoot + server.locations[i].path +  '/' + server.locations[i].index, server.locations[i].errorPage, server.root + '/' + server.errorPage);
+					return returnFinalPath(serverRoot + server.locations[i].path +  '/' + server.locations[i].index, server.locations[i].errorPage, server.errorPage);
 				}
-				return returnFinalPath(serverRoot + uri, server.locations[i].errorPage, server.root + '/' + server.errorPage);
+				return returnFinalPath(serverRoot + uri, server.locations[i].errorPage, server.errorPage);
 			} else {
 				if (uriTokens.size() == pathTokens.size() && server.locations[i].index == "")
-					return returnFinalPath(locationRoot + server.locations[i].path +'/' + server.index, server.locations[i].errorPage, server.root + '/' + server.errorPage);
+					return returnFinalPath(locationRoot + server.locations[i].path +'/' + server.index, server.locations[i].errorPage, server.errorPage);
 				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "")
-					return returnFinalPath(locationRoot + server.locations[i].path + '/' + server.locations[i].index, server.locations[i].errorPage, server.root + '/' + server.errorPage);
-				return returnFinalPath(locationRoot + uri, server.locations[i].errorPage, server.root + '/' + server.errorPage);
+					return returnFinalPath(locationRoot + server.locations[i].path + '/' + server.locations[i].index, server.locations[i].errorPage, server.errorPage);
+				return returnFinalPath(locationRoot + uri, server.locations[i].errorPage, server.errorPage);
 			}
 		}
 	}
-	return returnFinalPath(server.root + uri, "", server.root + '/' + server.errorPage);
+	return returnFinalPath(server.root + uri, "", server.errorPage);
 }
 
 std::string getContentType(std::string finalPath) {
@@ -83,6 +86,7 @@ std::string getContentType(std::string finalPath) {
 	fileMimeMap[".jpeg"] = "image/jpeg";
 	fileMimeMap[".png"] = "image/png";
 	fileMimeMap[".gif"] = "image/gif";
+	fileMimeMap[".ico"] = "image/x-icon";
 	fileMimeMap[".mp3"] = "audio/mpeg";
 	fileMimeMap[".mp4"] = "video/mp4";
 	fileMimeMap[".js"] = "text/javascript";
@@ -90,10 +94,10 @@ std::string getContentType(std::string finalPath) {
 	std::vector<std::string> tokens = tokenizer(finalPath, '.');
 	std::map<std::string, std::string>::iterator it = fileMimeMap.find("." + tokens[1]);
 	if (it != fileMimeMap.end()) {
-		std::cout << "MIME type for " << tokens[1] << ": " << it->second << std::endl;
+		log(__FILE__, __LINE__, concat(4, "MIME type for ", tokens[1].c_str(), ": ", it->second.c_str()), WARNING);
 		return fileMimeMap[tokens[1]];
 	} else {
-		std::cerr << "Error: File extension " << tokens[1] << "not found in fileMimeMap." << std::endl;
+		log(__FILE__, __LINE__, concat(3, "Error: File extension ", tokens[1].c_str(), " not found in fileMimeMap."), WARNING);
 		return "text/plain";
 	}
 }
@@ -109,7 +113,7 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 	std::string fileContent;
 	t_finalPath finalPath = getFinalPath(server.server, uri);
 	std::string serverName = server.server.serverName[0];
-	std::cout << "serveFile --- [" << finalPath.finalPath << "]\n";
+	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
 
 	if (ft_find(finalPath.finalPath, ".py")) {
 		handleCGI(finalPath.finalPath, httpReq, clientFd);
@@ -125,10 +129,9 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 			pathErrorPage = finalPath.serverErrorPage;
 		else 
 			pathErrorPage = finalPath.defaultErrorPage;
-		Response::notFoundResponse(clientFd, serverName,
-			readFile(pathErrorPage));
+		log(__FILE__, __LINE__, pathErrorPage.c_str(), WARNING);
+		Response::notFoundResponse(clientFd, serverName, pathErrorPage);
 		return ;
-
 	}
 
 	resp.content_type = getContentType(finalPath.finalPath);
@@ -198,6 +201,7 @@ Resource::Resource(Request &httpReq, int clientFd, SocketHandler &server) {
 	std::string resourcePath = httpReq.getPath();
 	std::string method = httpReq.getMethod();
 
+	log(__FILE__,__LINE__,method.c_str(), LOG);
 	if (method == "GET")
 		serveFile(httpReq, clientFd, server);
 	else if (method == "POST")
@@ -224,7 +228,7 @@ std::string Resource::readFile(std::string fullPath) {
 
     // Check if the file was successfully opened
     if (!inputFile.is_open()) {
-        std::cerr << "Failed to open file: " << fullPath << std::endl;
+		log(__FILE__, __LINE__, concat(2, "Failed to open file: ", fullPath.c_str()), WARNING);
         return "";
     }
 
@@ -238,6 +242,6 @@ std::string Resource::readFile(std::string fullPath) {
 
     // Close the file
     inputFile.close();
-	std::cout << "Success at Reading: " << fullPath << "\n"; 
+	log(__FILE__, __LINE__, concat(2, "Success opening File: ", fullPath.c_str()), LOG);
 	return res;
 }
