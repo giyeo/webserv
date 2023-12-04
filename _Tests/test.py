@@ -52,6 +52,7 @@ class MyTests(unittest.TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(headers.get("Server"),"example.com")
 		self.assertTrue("locationtest2error" in response.text)
+		
 unittest.main()
 
 # try:
