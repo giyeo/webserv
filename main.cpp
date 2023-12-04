@@ -80,6 +80,8 @@ int createClientSocket(int server_socket) {
 }
 
 void serverEvent(int server_socket, int epollFd) {
+	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";
+	log(__FILE__, __LINE__, concat(2,"Server event Arrived, fd: ",intToString(server_socket).c_str()), LOGBLUE);
 	epoll_event event;
 
 	int client_socket = createClientSocket(server_socket);
@@ -89,14 +91,15 @@ void serverEvent(int server_socket, int epollFd) {
 	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1)
 		log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);
 	whoswho[client_socket] = server_socket;
-	log(__FILE__,__LINE__,"Server Client Connected", LOG);
+	log(__FILE__,__LINE__,concat(2, "Client Connected, fd:", intToString(client_socket).c_str()), LOG);
+	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
 
 static std::map<int, Request> connectionHeaders;
 
 void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
-	log(__FILE__, __LINE__, concat(2, "Client ", "Request Arrived"), LOGBLUE);
+	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";	log(__FILE__, __LINE__, concat(2,"Client event Arrived, fd: ",intToString(client_socket).c_str()) , LOGBLUE);
 	ssize_t bytesRead;
 	char buffer[8196];
 
@@ -116,12 +119,12 @@ void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
 		epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
 		connectionHeaders.erase(client_socket);
 		close(client_socket);
-	} else if (bytesRead == -1 && errno != EWOULDBLOCK && errno != EAGAIN) {
-		log(__FILE__,__LINE__,"Waiting for socket to be Readable", WARNING);
-		epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
-		connectionHeaders.erase(client_socket);
-		close(client_socket);
-	}
+	}// else if (bytesRead == -1 && errno != EWOULDBLOCK && errno != EAGAIN) {
+	// 	log(__FILE__,__LINE__,"Waiting for socket to be Readable", WARNING);
+	// 	epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
+	// 	connectionHeaders.erase(client_socket);
+	// 	close(client_socket);
+	// }
 
 	if (connectionHeaders[client_socket].totalBytesRead > 0) {
 		log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(connectionHeaders[client_socket].totalBytesRead).c_str(), " bytes"), WARNING);
@@ -129,12 +132,13 @@ void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
 		unsigned long sendedRequestedBodySize = connectionHeaders[client_socket].totalBytesRead - connectionHeaders[client_socket].getHeadersLength();
 		if(connectionHeaders[client_socket].getContentLength() == sendedRequestedBodySize) {
 			if(connectionHeaders[client_socket].parseRequestBody(client_socket, serverSocket.server.serverName[0]))
-				Resource resource(connectionHeaders[client_socket], client_socket, serverSocket);
+				Resource resource(connectionHeaders[client_socket], client_socket, serverSocket, connectionHeaders);
 			epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
 			connectionHeaders.erase(client_socket);
 			close(client_socket);
 		}
 	}
+	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
 SocketHandler &getServerByFd(int fd, std::vector<SocketHandler> serverSockets) {
@@ -156,7 +160,7 @@ bool eventFdIsServerSocket(int fd, std::vector<SocketHandler> serversSockets) {
 void createEventPoll(std::vector<SocketHandler> &serversSockets) {
 	int epollFd = create_epoll(serversSockets);
 	epoll_event events[MAX_EVENTS];
-	log(__FILE__,__LINE__,"Epoll Created", LOG);
+	log(__FILE__,__LINE__,"Epoll Created\n\n\n", LOG);
 	while (true) {
 		//Listening to incoming epoll events
 		int numEvents = epoll_wait(epollFd, events, MAX_EVENTS, -1);
@@ -167,11 +171,9 @@ void createEventPoll(std::vector<SocketHandler> &serversSockets) {
 
 		for (int i = 0; i < numEvents; ++i) {
 			if (eventFdIsServerSocket(events[i].data.fd, serversSockets)) {
-				log(__FILE__,__LINE__,"Server Event", LOG);
 				serverEvent(events[i].data.fd, epollFd);
 			}
 			else {
-				log(__FILE__,__LINE__,"Client Event", LOG);
 				clientEvent(events[i].data.fd, epollFd,
 					getServerByFd(whoswho[events[i].data.fd], serversSockets));
 			}

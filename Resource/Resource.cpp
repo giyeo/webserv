@@ -20,6 +20,7 @@ typedef struct s_finalPath {
 
 bool isValidURI(std::vector<std::string> pathTokens, std::vector<std::string> uriTokens) {
 	for (size_t i = 0; i < pathTokens.size(); i++) {
+		std::cout << pathTokens[i] << " " << uriTokens[i] << "\n";
 		if(pathTokens[i] != uriTokens[i])
 			return false;
 	}
@@ -44,21 +45,19 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 	if (uri == "/")
 		return returnFinalPath(serverRoot + '/' + server.index, "", server.root + '/' + server.errorPage);
 
-	std::vector<std::string> uriTokens = tokenizer(uri, '/');
-
 	// printVector(uriTokens);
 	// TODO: check if is needed to put server.locations[i].path == '/' + uriTokens[0] in the ifs
+
+	std::vector<std::string> uriTokens = tokenizer(uri, '/');
 	for (size_t i = 0; i < server.locations.size(); i++) {
 		std::vector<std::string> pathTokens = tokenizer(server.locations[i].path, '/');
 		if (isValidURI(pathTokens, uriTokens)) {
-			std::cout << "getFinalPath --- Location found, root:" << server.locations[i].root << std::endl;
+			std::cout << "Location found, root:" << server.locations[i].root << std::endl;
 			locationRoot = server.locations[i].root;
 			if (locationRoot == "") {
 				std::cout << uriTokens.size() << pathTokens.size() << server.locations[i].index << '\n';
-				if (uriTokens.size() == pathTokens.size() && server.locations[i].index.empty()) {
-					
+				if (uriTokens.size() == pathTokens.size() && server.locations[i].index.empty())
 					return returnFinalPath(serverRoot + server.locations[i].path + '/' + server.index, server.locations[i].errorPage, server.errorPage);
-				}
 				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "") {
 					std::cout << "returning: " << serverRoot +  server.locations[i].path + '/' + server.locations[i].index << "\n";
 					return returnFinalPath(serverRoot + server.locations[i].path +  '/' + server.locations[i].index, server.locations[i].errorPage, server.errorPage);
@@ -73,8 +72,9 @@ t_finalPath getFinalPath(Server &server, std::string uri) {
 			}
 		}
 	}
-	return returnFinalPath(server.root + uri, "", server.errorPage);
-}
+	log(__FILE__,__LINE__,concat(5, "default root:",server.root.c_str(),uri.c_str()," Error Page:",server.errorPage.c_str()), LOG);
+	return returnFinalPath(server.root + uri, "", "/" + server.errorPage);
+} 
 
 std::string getContentType(std::string finalPath) {
 	std::map<std::string, std::string> fileMimeMap;
@@ -106,7 +106,7 @@ std::string getFileName(std::string finalPath) {
 	return tokenizer(finalPath, '/').back();
 }
 
-void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) {
+int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
 	response_object resp;
 	std::string serverRoot = server.server.root;
 	std::string uri = httpReq.getPath();
@@ -117,7 +117,7 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 
 	if (ft_find(finalPath.finalPath, ".py")) {
 		handleCGI(finalPath.finalPath, httpReq, clientFd);
-		return ;
+		return 1;
 	}
 
 	fileContent = readFile(finalPath.finalPath);
@@ -129,9 +129,11 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 			pathErrorPage = finalPath.serverErrorPage;
 		else 
 			pathErrorPage = finalPath.defaultErrorPage;
-		log(__FILE__, __LINE__, pathErrorPage.c_str(), WARNING);
+		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
+		connections.erase(clientFd);
 		Response::notFoundResponse(clientFd, serverName, pathErrorPage);
-		return ;
+		close(clientFd);
+		return -1;
 	}
 
 	resp.content_type = getContentType(finalPath.finalPath);
@@ -144,6 +146,7 @@ void Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server) 
 	Response httpRes(resp);
 	httpRes.sendResponse(clientFd);
 	close(clientFd);
+	return 1;
 }
 
 void Resource::handleCGI(std::string finalPath, Request &httpReq, int clientFd) {
@@ -196,14 +199,15 @@ void Resource::uploadFile(Request &httpReq, int clientFd) {
 	httpRes.sendResponse(clientFd);
 }
 
-Resource::Resource(Request &httpReq, int clientFd, SocketHandler &server) {
+Resource::Resource(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
 
 	std::string resourcePath = httpReq.getPath();
 	std::string method = httpReq.getMethod();
 
 	log(__FILE__,__LINE__,method.c_str(), LOG);
-	if (method == "GET")
-		serveFile(httpReq, clientFd, server);
+	if (method == "GET") {
+		serveFile(httpReq, clientFd, server, connections);
+	}
 	else if (method == "POST")
 		uploadFile(httpReq, clientFd);
 	// else if (method == "DELETE");
@@ -228,7 +232,7 @@ std::string Resource::readFile(std::string fullPath) {
 
     // Check if the file was successfully opened
     if (!inputFile.is_open()) {
-		log(__FILE__, __LINE__, concat(2, "Failed to open file: ", fullPath.c_str()), WARNING);
+		log(__FILE__, __LINE__, concat(2, "Failed to open file: ", fullPath.c_str()), FAILED);
         return "";
     }
 

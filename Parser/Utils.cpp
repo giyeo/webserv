@@ -41,6 +41,9 @@ void log(const char *file, int line, const char *description, LogLevel level) {
         case ERROR:
             colorCode = RED;
             break;
+		case FAILED:
+			colorCode = RED;
+			break;
 		case LOGBLUE:
             colorCode = BLUE;
             break;
@@ -53,8 +56,6 @@ void log(const char *file, int line, const char *description, LogLevel level) {
 	fileAndLine.append(file);
 	fileAndLine.append(":");
 	fileAndLine.append(intToString(line));
-	if(colorCode == BLUE)
-		std::cout << "\n\n\n\n\n\n\n"<< __TIMESTAMP__ << '\n';
     std::cout << colorCode << std::setw(30) << std::left <<  fileAndLine << " | " << description << RESET << "\n";
 	description = "";
 	if(level == ERROR)

@@ -56,19 +56,19 @@ void Server::parseLocation(std::string path, std::string value) {
 	std::string argument;
 
 	location.path = path;
-
+	std::cout << value << '\n';
 	while (getline(ss, line, ';')) {
 		std::vector<std::string> line_tokens = tokenizer(line, ':');
-
+		
 		if (line_tokens.size() == 1) {
 			std::cerr << "invalid value for directive " << line_tokens[0] << std::endl;
 			exit(1);
 		}
-		line_tokens[0] = trimString(line_tokens[0]);
-		directive = line_tokens[0];
-		argument = line_tokens[1];
+
+		directive = trimString(line_tokens[0]);
+		argument = trimString(line_tokens[1]);
+		location.dispatcher(directive, argument);
 	}
-	location.dispatcher(directive, argument);
 	directive.clear();
 	argument.clear();
 	this->locations.push_back(location);

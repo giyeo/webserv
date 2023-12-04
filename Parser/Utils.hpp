@@ -23,7 +23,8 @@ enum LogLevel {
     LOG,
     WARNING,
     ERROR,
-	LOGBLUE
+	LOGBLUE,
+	FAILED
 };
 
 std::string trimString(const std::string& str);
