@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Master.hpp"
+#include "Location.hpp"
 
 class Server {
 	public:

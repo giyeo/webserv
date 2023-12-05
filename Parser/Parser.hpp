@@ -1,5 +1,5 @@
 #pragma once
 
-#include "../Master.hpp"
+#include "Server.hpp"
 
 std::vector<Server> configurationParser(char *argv);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Master.hpp"
+#include "../Parser/Server.hpp"
 
 class SocketHandler {
 	public:

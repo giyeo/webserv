@@ -121,7 +121,7 @@ void Resource::uploadFile(Request &httpReq, int clientFd) {
 
 Resource::Resource() {}
 
-Resource::Resource(t_config &config) {
+Resource::Resource(Config &config) {
 	log(__FILE__,__LINE__,"Dispaching Resource", LOG);
 	std::string resourcePath = config.httpReq.getPath();
 	std::string method = config.httpReq.getMethod();

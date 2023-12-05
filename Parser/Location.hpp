@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../Master.hpp"
+#include "../Main.hpp"
+#include "Utils.hpp"
 
 class Location {
 	public:

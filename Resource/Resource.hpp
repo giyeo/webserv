@@ -5,7 +5,7 @@
 class Resource {
 	public:
 		Resource();
-		Resource(t_config &config);
+		Resource(Config &config);
 		static std::string readFile(std::string filePath);
 	private:
 		std::map<std::string, std::string> resourceToFileMapping;

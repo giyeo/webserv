@@ -45,13 +45,14 @@ int createClientSocket(int server_socket) {
 	return client_socket;
 }
 
-void serverEvent(t_config &config) {
+void serverEvent(Config &config) {
 	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";
 	log(__FILE__, __LINE__, concat(2,"Server event Arrived, fd: ",intToString(config.serverFd).c_str()), LOGBLUE);
 	epoll_event event;
 
 	int client_socket = createClientSocket(config.serverFd);
 
+	config.print();
 	event.events = EPOLLIN | EPOLLET;
 	event.data.fd = client_socket;
 	if (epoll_ctl(config.epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1)
@@ -61,7 +62,7 @@ void serverEvent(t_config &config) {
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
-void clientEvent(t_config &config) {
+void clientEvent(Config &config) {
 	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";	log(__FILE__, __LINE__, concat(2,"Client event Arrived, fd: ",intToString(config.serverFd).c_str()) , LOGBLUE);
 	ssize_t bytesRead;
 	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
@@ -118,7 +119,7 @@ bool eventFdIsServerSocket(int fd, std::vector<SocketHandler> serversSockets) {
 	return false;
 }
 
-void createEventPoll(t_config &config) {
+void createEventPoll(Config &config) {
 	config.epollFd = create_epoll(config.serverSockets);
 	epoll_event events[MAX_EVENTS];
 	log(__FILE__,__LINE__,"Epoll Created\n\n\n", LOG);
@@ -129,15 +130,17 @@ void createEventPoll(t_config &config) {
 			close(config.epollFd);
 			log(__FILE__,__LINE__,"Epoll Failed", ERROR);
 		}
-
 		for (int i = 0; i < numEvents; ++i) {
-			config.clientFd = events[i].data.fd;
+			config.print();
+
 			if (eventFdIsServerSocket(events[i].data.fd, config.serverSockets)) {
+				config.serverFd = events[i].data.fd;
 				serverEvent(config);
 			}
 			else {
+				config.clientFd = events[i].data.fd;
 				config.serverFd = config.whoswho[config.clientFd];
-				config.serverSocketIndex = getServerByFd(config.clientFd, config.serverSockets);
+				config.serverSocketIndex = getServerByFd(config.serverFd, config.serverSockets);
 				clientEvent(config);
 			}
 		}
@@ -159,7 +162,7 @@ int main(int argc, char **argv) {
 		std::cout << "Must have one argument only, example: ./server webserv.conf\n";
 		exit(EXIT_FAILURE);
 	}
-	t_config config;
+	Config config;
 	
 	log(__FILE__,__LINE__,"Server Started", LOG);
 	config.servers = configurationParser(argv[1]);
