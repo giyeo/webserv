@@ -30,29 +30,31 @@ std::string getFileName(std::string finalPath) {
 	return tokenizer(finalPath, '/').back();
 }
 
-int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
+// int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
+int	Resource::serveFile(Config &config) {	
 	response_object resp;
-	std::string serverRoot = server.server.root;
-	std::string uri = httpReq.getPath();
+	std::string serverRoot = config.server.server.root;
+	std::string uri = config.httpReq.getPath();
 	std::string fileContent;
+	int clientFd = config.clientFd;
 	GetPath getPathObj;
-	t_finalPath finalPath = getPathObj.getFinalPath(server.server, uri);
-	std::string serverName = server.server.serverName[0];
+	t_finalPath finalPath = getPathObj.getFinalPath(config.server.server, uri);
+	std::string serverName = config.server.server.serverName[0];
 	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
 
 	fileContent = readFile(finalPath.finalPath);
 	if(fileContent == "") {
 		std::string pathErrorPage = finalPath.errorPage;
 		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
-		connections.erase(clientFd);
+		config.connectionHeaders.erase(clientFd);
 		Response::notFoundResponse(clientFd, serverName, pathErrorPage);
 		close(clientFd);
 		return -1;
 	}
 
 	if (ft_find(finalPath.finalPath, ".py") && finalPath.locationIndex != -1) {
-		if(server.server.locations[finalPath.locationIndex].proxyPass == finalPath.filename)
-			handleCGI(finalPath.finalPath, httpReq, serverName, clientFd);
+		if(config.server.server.locations[finalPath.locationIndex].proxyPass == finalPath.filename)
+			handleCGI(finalPath.finalPath, config.httpReq, serverName, clientFd);
 		return 1;
 	}
 
@@ -128,7 +130,8 @@ Resource::Resource(Config &config) {
 	//
 	log(__FILE__,__LINE__,method.c_str(), LOG);
 	if (method == "GET") {
-		serveFile(config.httpReq, config.clientFd, config.serverSockets[config.serverSocketIndex], config.connectionHeaders);
+		serveFile(config);
+		// serveFile(config.httpReq, config.clientFd, config.serverSockets[config.serverSocketIndex], config.connectionHeaders);
 	}
 	else if (method == "POST")
 		uploadFile(config.httpReq, config.clientFd);

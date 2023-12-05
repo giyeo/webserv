@@ -24,6 +24,7 @@ class Config {
 		std::vector<Server> servers;
 
 		//Redefined at Each request
+		SocketHandler server;
 		Request httpReq;
 		int epollFd;
 		int serverFd;
