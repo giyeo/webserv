@@ -1,16 +1,8 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "Utils.hpp"
-#include "Location.hpp"
-#include <unistd.h>
-#include <string>
-#include <iostream>
-#include <stdlib.h>
-#include <vector>
-#include <sstream>
-#include <map>
-#include <algorithm>
+#include "../Main.hpp"
+#include "./Location.hpp"
 
 class Server {
 	public:

@@ -1,8 +1,7 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
-#include <iostream>
-#include <map>
+#include "../Main.hpp"
 
 typedef struct {
 	std::map<std::string, std::string> strConf;

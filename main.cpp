@@ -1,38 +1,6 @@
-#include "main.hpp"
-
-#include <dirent.h>  // For directory operations
-#include <unistd.h>  // For getpid
-
-std::map<int, int> whoswho;
-
-void listFileDescriptors() {
-    // Get the process ID
-    pid_t pid = getpid();
-
-    // Construct the path to the /proc directory
-    char procPath[256];
-    std::sprintf(procPath, "/proc/%d/fd", pid);
-
-    // Open the /proc/<PID>/fd directory
-    DIR* dir = opendir(procPath);
-    if (dir == NULL) {
-        perror("opendir failed");
-        return;
-    }
-
-    // Read the contents of the directory
-    struct dirent* entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_name[0] != '.') {
-            // Print the file descriptor
-            std::cout << "File Descriptor: " << entry->d_name << std::endl;
-        }
-    }
-
-    // Close the directory
-    closedir(dir);
-}
-
+#include "Main.hpp"
+#include "Resource/Resource.hpp"
+#include "Types.hpp"
 
 int create_epoll(std::vector<SocketHandler> &serversSocket) {
 	int epollFd = 0;
@@ -79,76 +47,70 @@ int createClientSocket(int server_socket) {
 	return client_socket;
 }
 
-void serverEvent(int server_socket, int epollFd) {
+void serverEvent(t_config &config) {
 	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";
-	log(__FILE__, __LINE__, concat(2,"Server event Arrived, fd: ",intToString(server_socket).c_str()), LOGBLUE);
+	log(__FILE__, __LINE__, concat(2,"Server event Arrived, fd: ",intToString(config.serverFd).c_str()), LOGBLUE);
 	epoll_event event;
 
-	int client_socket = createClientSocket(server_socket);
-	
+	int client_socket = createClientSocket(config.serverFd);
+
 	event.events = EPOLLIN | EPOLLET;
 	event.data.fd = client_socket;
-	if (epoll_ctl(epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1)
+	if (epoll_ctl(config.epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1)
 		log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);
-	whoswho[client_socket] = server_socket;
+	config.whoswho[client_socket] = config.serverFd;
 	log(__FILE__,__LINE__,concat(2, "Client Connected, fd:", intToString(client_socket).c_str()), LOG);
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
-
-static std::map<int, Request> connectionHeaders;
-
-void clientEvent(int client_socket, int epollFd, SocketHandler serverSocket) {
-	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";	log(__FILE__, __LINE__, concat(2,"Client event Arrived, fd: ",intToString(client_socket).c_str()) , LOGBLUE);
+void clientEvent(t_config &config) {
+	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";	log(__FILE__, __LINE__, concat(2,"Client event Arrived, fd: ",intToString(config.serverFd).c_str()) , LOGBLUE);
 	ssize_t bytesRead;
+	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
 	char buffer[8196];
 
-	while ((bytesRead = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
+	while ((bytesRead = recv(config.clientFd, buffer, sizeof(buffer), 0)) > 0) {
 		buffer[bytesRead] = '\0';
-		std::map<int, Request>::iterator it = connectionHeaders.find(client_socket);
-		if(it == connectionHeaders.end()) {
+		std::map<int, Request>::iterator it = config.connectionHeaders.find(config.clientFd);
+		if(it == config.connectionHeaders.end()) {
 			Request httpReq((const char *)&buffer, atoi(serverSocket.server.clientMaxBodySize.c_str()));
-			connectionHeaders[client_socket] = httpReq;
+			config.connectionHeaders[config.clientFd] = httpReq;
+			config.httpReq = httpReq;
 		}
-		connectionHeaders[client_socket].requestBodyBuffer.append(buffer);
-		connectionHeaders[client_socket].totalBytesRead += bytesRead;
+		config.connectionHeaders[config.clientFd].requestBodyBuffer.append(buffer);
+		config.connectionHeaders[config.clientFd].totalBytesRead += bytesRead;
 	}
 
 	if (bytesRead == 0) {
 		log(__FILE__,__LINE__,"Connection closed by client", LOG);
-		epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
-		connectionHeaders.erase(client_socket);
-		close(client_socket);
-	}// else if (bytesRead == -1 && errno != EWOULDBLOCK && errno != EAGAIN) {
-	// 	log(__FILE__,__LINE__,"Waiting for socket to be Readable", WARNING);
-	// 	epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
-	// 	connectionHeaders.erase(client_socket);
-	// 	close(client_socket);
-	// }
+		epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
+		config.connectionHeaders.erase(config.clientFd);
+		close(config.clientFd);
+	}
 
-	if (connectionHeaders[client_socket].totalBytesRead > 0) {
-		log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(connectionHeaders[client_socket].totalBytesRead).c_str(), " bytes"), WARNING);
-		// std::cout << connectionHeaders[client_socket].requestBodyBuffer << '\n';
-		unsigned long sendedRequestedBodySize = connectionHeaders[client_socket].totalBytesRead - connectionHeaders[client_socket].getHeadersLength();
-		if(connectionHeaders[client_socket].getContentLength() == sendedRequestedBodySize) {
+	if (config.connectionHeaders[config.clientFd].totalBytesRead > 0) {
+		log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(config.connectionHeaders[config.clientFd].totalBytesRead).c_str(), " bytes"), WARNING);
+
+		unsigned long sendedRequestedBodySize = config.connectionHeaders[config.clientFd].totalBytesRead - config.connectionHeaders[config.clientFd].getHeadersLength();
+		if(config.connectionHeaders[config.clientFd].getContentLength() == sendedRequestedBodySize) {
 			log(__FILE__, __LINE__, "Data fully Received", LOG);
-			if(connectionHeaders[client_socket].parseRequestBody(client_socket, serverSocket.server.serverName[0]))
-				Resource resource(connectionHeaders[client_socket], client_socket, serverSocket, connectionHeaders);
-			epoll_ctl(epollFd, EPOLL_CTL_DEL, client_socket, NULL);
-			connectionHeaders.erase(client_socket);
-			close(client_socket);
+			if(config.connectionHeaders[config.clientFd].parseRequestBody(config.clientFd, serverSocket.server.serverName[0]))
+				Resource res(config);
+			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
+			config.connectionHeaders.erase(config.clientFd);
+			close(config.clientFd);
 		}
 	}
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
-SocketHandler &getServerByFd(int fd, std::vector<SocketHandler> serverSockets) {
+int getServerByFd(int fd, std::vector<SocketHandler> serverSockets) {
 	for(size_t i = 0; i < serverSockets.size(); i++) {
 		if (fd == serverSockets[i].getFd())
-			return serverSockets[i];
+			return i;
 	}
-	std::cout << "TODO DEU TUDO ERRADO\n";
-	exit(1);
+	log(__FILE__, __LINE__, "Vacilamo pesado pq era pra achar", ERROR);
+	return 0;
 }
 
 bool eventFdIsServerSocket(int fd, std::vector<SocketHandler> serversSockets) {
@@ -158,29 +120,31 @@ bool eventFdIsServerSocket(int fd, std::vector<SocketHandler> serversSockets) {
 	return false;
 }
 
-void createEventPoll(std::vector<SocketHandler> &serversSockets) {
-	int epollFd = create_epoll(serversSockets);
+void createEventPoll(t_config &config) {
+	config.epollFd = create_epoll(config.serverSockets);
 	epoll_event events[MAX_EVENTS];
 	log(__FILE__,__LINE__,"Epoll Created\n\n\n", LOG);
 	while (true) {
 		//Listening to incoming epoll events
-		int numEvents = epoll_wait(epollFd, events, MAX_EVENTS, -1);
+		int numEvents = epoll_wait(config.epollFd, events, MAX_EVENTS, -1);
 		if (numEvents == -1) {
-			close(epollFd);
+			close(config.epollFd);
 			log(__FILE__,__LINE__,"Epoll Failed", ERROR);
 		}
 
 		for (int i = 0; i < numEvents; ++i) {
-			if (eventFdIsServerSocket(events[i].data.fd, serversSockets)) {
-				serverEvent(events[i].data.fd, epollFd);
+			config.clientFd = events[i].data.fd;
+			if (eventFdIsServerSocket(events[i].data.fd, config.serverSockets)) {
+				serverEvent(config);
 			}
 			else {
-				clientEvent(events[i].data.fd, epollFd,
-					getServerByFd(whoswho[events[i].data.fd], serversSockets));
+				config.serverFd = config.whoswho[config.clientFd];
+				config.serverSocketIndex = getServerByFd(config.clientFd, config.serverSockets);
+				clientEvent(config);
 			}
 		}
 	}
-	close(epollFd);
+	close(config.epollFd);
 }
 
 void verifyServers(std::vector<Server> &servers) {
@@ -197,18 +161,18 @@ int main(int argc, char **argv) {
 		std::cout << "Must have one argument only, example: ./server webserv.conf\n";
 		exit(EXIT_FAILURE);
 	}
+	t_config config;
 	
 	log(__FILE__,__LINE__,"Server Started", LOG);
-	std::vector<Server> servers = configurationParser(argv[1]);
+	config.servers = configurationParser(argv[1]);
 	log(__FILE__,__LINE__,"Configuration Parsed", LOG);
-	verifyServers(servers);
-	std::vector<SocketHandler> serverSockets;
-	for(size_t i = 0; i < servers.size(); i++) {
-		SocketHandler server_socket(servers[i]);
-		serverSockets.push_back(server_socket);
+	verifyServers(config.servers);
+	for(size_t i = 0; i < config.servers.size(); i++) {
+		SocketHandler server_socket(config.servers[i]);
+		config.serverSockets.push_back(server_socket);
 	}
 	log(__FILE__,__LINE__,"Sockets Created", LOG);
 	// Handle accept incoming requests
-	createEventPoll(serverSockets); //we are going to send the server_config as well, later..
+	createEventPoll(config); //we are going to send the server_config as well, later..
 	return (0);
 }

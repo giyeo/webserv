@@ -49,5 +49,22 @@ class MyTests(unittest.TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(headers.get("Server"),"example.com")
 		self.assertTrue("locationtest2error" in response.text)
-		
+	
+	def test3GetDefaultErrorPage(self):
+		res = "webserver default error page"
+		response = requests.get("http://localhost:8083/")
+		headers = dict(response.headers)
+		self.assertEqual(headers.get("Server"),"default")
+		self.assertTrue(res in response.text)
+		response = requests.get("http://localhost:8083/asd")
+		self.assertTrue(res in response.text)
+		response = requests.get("http://localhost:8083/asd/")
+		self.assertTrue(res in response.text)
+		response = requests.get("http://localhost:8083/location/")
+		self.assertTrue(res in response.text)
+		response = requests.get("http://localhost:8083/location")
+		self.assertTrue(res in response.text)
+		response = requests.get("http://localhost:8083/location/asd")
+		self.assertTrue(res in response.text)
+
 unittest.main()

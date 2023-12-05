@@ -1,19 +1,11 @@
 #ifndef SOCKETHANDLER_HPP
 #define SOCKETHANDLER_HPP
 
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <cerrno>
-#include <cstdio>
 #include "../Parser/Parser.hpp"
-#include <fcntl.h>
 
 class SocketHandler {
 	public:
+		SocketHandler();
 		SocketHandler(Server &server);
 		~SocketHandler();
 		
@@ -22,7 +14,7 @@ class SocketHandler {
 		void	socketBind();
 		void	socketListen();
 		int		getFd();
-		Server &server;
+		Server  server;
 	private:
 		int fd;
 		int port;

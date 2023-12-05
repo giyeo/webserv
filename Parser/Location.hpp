@@ -1,11 +1,8 @@
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
 
-#include "Utils.hpp"
-#include <string>
-#include <unistd.h>
-
-
+#include "../Main.hpp"
+#include "./Utils.hpp"
 
 class Location {
 public:

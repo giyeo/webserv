@@ -10,11 +10,12 @@ SRCS =	main.cpp \
 		Configuration/Configuration.cpp \
 		Response/Response.cpp \
 		Request/Request.cpp \
+		Resource/GetPath.cpp \
 		Resource/Resource.cpp \
 		Parser/Utils.cpp \
-		Parser/Server.cpp\
+		Parser/Server.cpp \
 		Parser/Location.cpp \
-		Parser/Parser.cpp
+		Parser/Parser.cpp \
 
 TEST_SRCS =	test.cpp \
 		Communication/SocketHandler.cpp \
@@ -43,13 +44,16 @@ $(TEST_TARGET): $(TEST_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 # Rule to compile source files to object files
-%.o: %.cpp
+%.o: %.cpp $(wildcard *.hpp)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
 	rm -f $(TARGET)
 
 re: clean all
+
+cleano:
+	rm -rf */*.o && rm -rf ./*.o
 
 minunit: $(MINUNIT_SRCS_FILES)
 	$(CXX) $(CXXFLAGS) $(MINUNIT_SRCS_FILES) -o $(TEST_TARGET)
