@@ -1,11 +1,15 @@
-#ifndef MAIN_HPP
-#define MAIN_HPP
+#pragma once
 
 #define RESET   "\033[0m"
 #define RED     "\033[31m"
 #define GREEN   "\033[32m"
 #define YELLOW  "\033[33m"
 #define BLUE    "\033[34m"
+
+#define NOTFOUND 0
+#define FOUND 1
+#define REDIRECT_INDEX 2
+#define MAX_EVENTS 10
 
 enum LogLevel {
 	LOG,
@@ -14,11 +18,6 @@ enum LogLevel {
 	LOGBLUE,
 	FAILED
 };
-
-#define NOTFOUND 0
-#define FOUND 1
-#define REDIRECT_INDEX 2
-#define MAX_EVENTS 10
 
 #include <iostream>
 #include <cstring>
@@ -41,5 +40,3 @@ enum LogLevel {
 #include <stdexcept>
 #include <cstdarg>
 #include <iomanip>
-
-#endif

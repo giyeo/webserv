@@ -1,7 +1,6 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#pragma once
 
-#include "../Main.hpp"
+#include "../Master.hpp"
 
 std::string trimString(const std::string& str);
 bool contains(std::vector<std::string> vector, std::string target);
@@ -16,5 +15,3 @@ void printVector(std::vector<std::string> vector);
 void log(const char *file, int line, const char *description, LogLevel level);
 const char* concat(int count, ...);
 std::string intToString(int value);
-
-#endif

@@ -1,5 +1,7 @@
 #include "Location.hpp"
 
+Location::Location() {}
+
 void Location::parseRoot(std::string value){
 	std::vector<std::string> tokens = tokenizer(value, ' ');
 	if(tokens.size() != 1) {

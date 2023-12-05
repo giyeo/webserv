@@ -1,8 +1,6 @@
-#ifndef SERVER_HPP
-#define SERVER_HPP
+#pragma once
 
-#include "../Main.hpp"
-#include "./Location.hpp"
+#include "../Master.hpp"
 
 class Server {
 	public:
@@ -26,5 +24,3 @@ class Server {
 		std::string clientMaxBodySize;
 		std::vector<Location> locations;
 };
-
-#endif

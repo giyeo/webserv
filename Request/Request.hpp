@@ -1,9 +1,6 @@
-#ifndef REQUEST_HPP
-#define REQUEST_HPP
+#pragma once
 
-#include "../Main.hpp"
-#include "../Parser/Utils.hpp"
-#include "../Response/Response.hpp"
+#include "../Master.hpp"
 
 class Request {
 	public:
@@ -46,5 +43,3 @@ class Request {
 		std::map<std::string, std::string> headers;
 		size_t maxBodySize;
 };
-
-#endif

@@ -6,16 +6,16 @@ CXXFLAGS = -Wall -Wextra -std=c++98
 
 # Source files and output executable
 SRCS =	main.cpp \
+		Parser/Utils.cpp \
+		Parser/Location.cpp \
+		Parser/Server.cpp \
+		Parser/Parser.cpp \
 		Communication/SocketHandler.cpp \
 		Configuration/Configuration.cpp \
 		Response/Response.cpp \
 		Request/Request.cpp \
 		Resource/GetPath.cpp \
 		Resource/Resource.cpp \
-		Parser/Utils.cpp \
-		Parser/Server.cpp \
-		Parser/Location.cpp \
-		Parser/Parser.cpp \
 
 TEST_SRCS =	test.cpp \
 		Communication/SocketHandler.cpp \

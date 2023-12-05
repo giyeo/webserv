@@ -1,7 +1,6 @@
-#ifndef SOCKETHANDLER_HPP
-#define SOCKETHANDLER_HPP
+#pragma once
 
-#include "../Parser/Parser.hpp"
+#include "../Master.hpp"
 
 class SocketHandler {
 	public:
@@ -21,5 +20,3 @@ class SocketHandler {
 		//N connection requests will be queued before further requests are refused
 		int nqueue;
 };
-
-#endif

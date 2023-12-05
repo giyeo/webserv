@@ -1,7 +1,6 @@
-#ifndef GETPATH_HPP
-#define GETPATH_HPP
+#pragma once
 
-#include "../Main.hpp"
+#include "../Master.hpp"
 
 typedef struct s_finalPath {
 	std::string finalPath;
@@ -23,4 +22,3 @@ class GetPath {
 	private:
 		std::string defaultErrorPage;
 };
-#endif

@@ -1,8 +1,6 @@
-#ifndef RESPONSE_HPP
-#define RESPONSE_HPP
+#pragma once
 
-#include "../Main.hpp"
-#include "../Types.hpp"
+#include "../Master.hpp"
 
 class Response {
 	public:
@@ -14,5 +12,3 @@ class Response {
 	private:
 		response_object res;
 };
-
-#endif

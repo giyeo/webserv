@@ -1,8 +1,6 @@
-#ifndef RESOURCE_HPP
-#define RESOURCE_HPP
+#pragma once
 
-#include "../Main.hpp"
-#include "../Types.hpp"
+#include "../Master.hpp"
 
 class Resource {
 	public:
@@ -17,5 +15,3 @@ class Resource {
 		void handleCGI(std::string finalPath, Request &httpReq, std::string serverName, int clientFd);
 		void uploadFile(Request &httpReq, int clientFd);
 };
-
-#endif

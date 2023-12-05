@@ -1,6 +1,4 @@
-#include "Main.hpp"
-#include "Resource/Resource.hpp"
-#include "Types.hpp"
+#include "Master.hpp"
 
 int create_epoll(std::vector<SocketHandler> &serversSocket) {
 	int epollFd = 0;

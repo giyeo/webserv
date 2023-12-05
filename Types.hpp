@@ -1,5 +1,6 @@
-#ifndef TYPES_HPP
-#define TYPES_HPP
+#pragma once
+
+#include "Master.hpp"
 
 typedef struct s_response {
 	//Status Line
@@ -56,5 +57,3 @@ typedef struct s_config {
 	int clientFd;
 	int serverSocketIndex;
 }	t_config;
-
-#endif

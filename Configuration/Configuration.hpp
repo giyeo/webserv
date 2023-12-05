@@ -1,7 +1,6 @@
-#ifndef CONFIGURATION_HPP
-#define CONFIGURATION_HPP
+#pragma once
 
-#include "../Main.hpp"
+#include "../Master.hpp"
 
 typedef struct {
 	std::map<std::string, std::string> strConf;
@@ -15,5 +14,3 @@ class Configuration {
 		Configuration(char *path_to_file);
 		Config &getConfig();
 };
-
-#endif
