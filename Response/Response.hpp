@@ -1,10 +1,6 @@
-#ifndef RESPONSE_HPP
-#define RESPONSE_HPP
+#pragma once
 
-#include <iostream>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <cerrno>
+#include "../Main.hpp"
 
 typedef struct s_response {
 	//Status Line
@@ -50,5 +46,3 @@ class Response {
 	private:
 		response_object res;
 };
-
-#endif

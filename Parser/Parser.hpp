@@ -1,8 +1,5 @@
-#ifndef PARSER_HPP
-#define PARSER_HPP
+#pragma once
 
 #include "Server.hpp"
 
 std::vector<Server> configurationParser(char *argv);
-
-#endif

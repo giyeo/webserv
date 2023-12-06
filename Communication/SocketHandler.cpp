@@ -1,5 +1,7 @@
 #include "SocketHandler.hpp"
 
+SocketHandler::SocketHandler() {}
+
 SocketHandler::SocketHandler(Server &server): server(server) {
 	this->port = atoi(server.listen.c_str());
 	this->nqueue = 8;

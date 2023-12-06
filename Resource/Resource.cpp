@@ -1,83 +1,5 @@
 #include "Resource.hpp"
 
-#define NOTFOUND 0
-#define FOUND 1
-#define REDIRECT_INDEX 2
-
-std::string defaultErrorPageVar = "/home/giyeo/webserv/webserv/defaultErrorPage.html";
-
-typedef struct s_finalPath {
-	std::string finalPath;
-	std::string locationErrorPage;
-	std::string serverErrorPage;
-	std::string defaultErrorPage;
-
-	s_finalPath() :
-		finalPath(),
-		locationErrorPage(),
-		serverErrorPage(),
-		defaultErrorPage(defaultErrorPageVar)
-	{}
-} t_finalPath;
-
-bool isValidURI(std::vector<std::string> pathTokens, std::vector<std::string> uriTokens) {
-	for (size_t i = 0; i < pathTokens.size(); i++) {
-		if(pathTokens[i] != uriTokens[i])
-			return false;
-	}
-	return true;
-}
-
-t_finalPath returnFinalPath(std::string finalPath, std::string locationErrorPage, std::string serverErrorPage) {
-	t_finalPath res;
-	res.finalPath = finalPath;
-	res.locationErrorPage = locationErrorPage;
-	res.serverErrorPage = serverErrorPage;
-	return res;
-}
-
-t_finalPath getFinalPath(Server &server, std::string uri) {
-	std::string finalPath;
-	std::string serverRoot = server.root;
-	std::string locationRoot;
-
-	log(__FILE__, __LINE__, concat(2,"Requested URI:",uri.c_str()), LOG);
-
-	if (uri == "/") {
-		std::string indx = (server.index.empty()) ? "/index.html" : '/' + server.index;
-		std::string err = (server.errorPage.empty()) ? "" : '/' + server.errorPage;
-		return returnFinalPath(serverRoot + indx, "", err);
-	} else if (uri == defaultErrorPageVar)
-		return returnFinalPath(defaultErrorPageVar, "", "");
-	// printVector(uriTokens);
-	// TODO: check if is needed to put server.locations[i].path == '/' + uriTokens[0] in the ifs
-
-	std::vector<std::string> uriTokens = tokenizer(uri, '/');
-	for (size_t i = 0; i < server.locations.size(); i++) {
-		std::vector<std::string> pathTokens = tokenizer(server.locations[i].path, '/');
-		if (isValidURI(pathTokens, uriTokens)) {
-			locationRoot = server.locations[i].root;
-			if (locationRoot == "") {
-				if (uriTokens.size() == pathTokens.size() && server.locations[i].index.empty())
-					return returnFinalPath(serverRoot + server.locations[i].path + '/' + server.index, server.locations[i].errorPage, server.errorPage);
-				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "") {
-					std::cout << "returning: " << serverRoot +  server.locations[i].path + '/' + server.locations[i].index << "\n";
-					return returnFinalPath(serverRoot + server.locations[i].path +  '/' + server.locations[i].index, server.locations[i].errorPage, server.errorPage);
-				}
-				return returnFinalPath(serverRoot + uri, server.locations[i].errorPage, server.errorPage);
-			} else {
-				if (uriTokens.size() == pathTokens.size() && server.locations[i].index == "")
-					return returnFinalPath(locationRoot + server.locations[i].path +'/' + server.index, server.locations[i].errorPage, server.errorPage);
-				else if (uriTokens.size() == pathTokens.size() && server.locations[i].index != "")
-					return returnFinalPath(locationRoot + server.locations[i].path + '/' + server.locations[i].index, server.locations[i].errorPage, server.errorPage);
-				return returnFinalPath(locationRoot + uri, server.locations[i].errorPage, server.errorPage);
-			}
-		}
-	}
-	log(__FILE__,__LINE__,concat(5, "default root:",server.root.c_str(),uri.c_str()," Error Page:",server.errorPage.c_str()), LOG);
-	return returnFinalPath(server.root + uri, "", "/" + server.errorPage);
-}
-
 std::string getContentType(std::string finalPath) {
 	std::map<std::string, std::string> fileMimeMap;
 	fileMimeMap[".txt"] = "text/plain";
@@ -108,34 +30,32 @@ std::string getFileName(std::string finalPath) {
 	return tokenizer(finalPath, '/').back();
 }
 
-int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
+// int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
+int	Resource::serveFile(Config &config) {	
 	response_object resp;
-	std::string serverRoot = server.server.root;
-	std::string uri = httpReq.getPath();
+	std::string serverRoot = config.server.server.root;
+	std::string uri = config.httpReq.getPath();
 	std::string fileContent;
-	t_finalPath finalPath = getFinalPath(server.server, uri);
-	std::string serverName = server.server.serverName[0];
+	int clientFd = config.clientFd;
+	GetPath getPathObj;
+	t_finalPath finalPath = getPathObj.getFinalPath(config.server.server, uri);
+	std::string serverName = config.server.server.serverName[0];
 	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
-
-	if (ft_find(finalPath.finalPath, ".py")) {
-		handleCGI(finalPath.finalPath, httpReq, clientFd);
-		return 1;
-	}
 
 	fileContent = readFile(finalPath.finalPath);
 	if(fileContent == "") {
-		std::string pathErrorPage; 
-		if (finalPath.locationErrorPage != "")
-			pathErrorPage = finalPath.locationErrorPage;
-		else if (finalPath.serverErrorPage != "")
-			pathErrorPage = finalPath.serverErrorPage;
-		else
-			pathErrorPage = finalPath.defaultErrorPage;
+		std::string pathErrorPage = finalPath.errorPage;
 		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
-		connections.erase(clientFd);
+		config.events.erase(clientFd);
 		Response::notFoundResponse(clientFd, serverName, pathErrorPage);
 		close(clientFd);
 		return -1;
+	}
+
+	if (ft_find(finalPath.finalPath, ".py") && finalPath.locationIndex != -1) {
+		if(config.server.server.locations[finalPath.locationIndex].proxyPass == finalPath.filename)
+			handleCGI(finalPath.finalPath, config.httpReq, serverName, clientFd);
+		return 1;
 	}
 
 	resp.content_type = getContentType(finalPath.finalPath);
@@ -146,12 +66,19 @@ int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, s
 		resp.filename = getFileName(finalPath.finalPath);
 
 	Response httpRes(resp);
-	httpRes.sendResponse(clientFd);
-	close(clientFd);
+	std::string buffer = httpRes.toString();
+
+	config.events[clientFd].buffer = buffer;
+	config.events[clientFd].bytes = buffer.size();
+
+	struct epoll_event ev;
+	ev.events = EPOLLOUT | EPOLLET;
+	ev.data.fd = clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, clientFd, &ev);
 	return 1;
 }
 
-void Resource::handleCGI(std::string finalPath, Request &httpReq, int clientFd) {
+void Resource::handleCGI(std::string finalPath, Request &httpReq, std::string serverName, int clientFd) {
 	response_object resp;
 	std::string command = "python3 " + finalPath;	
 	
@@ -163,6 +90,7 @@ void Resource::handleCGI(std::string finalPath, Request &httpReq, int clientFd) 
 		std::cerr << "Error opening pipe" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	
 	char buffer[1024];
 	std::string res;
 	while (fgets(buffer, 1024, fp) != NULL) {
@@ -170,17 +98,16 @@ void Resource::handleCGI(std::string finalPath, Request &httpReq, int clientFd) 
 	}
 	pclose(fp);
 
-	resp.http_version = "1.1";
-	resp.status_code = "200";
-	resp.status_text = "OK";
-	resp.content_type = "text/html";
+	resp.content_type = getContentType(res);
 	resp.content_length = itos(res.length());
-	resp.date = "2023-09-20T00:31:02.612Z";
-	resp.server = "webserv";
-	resp.connection = "close";
+	resp.server = serverName;
 	resp.response_body = res;
+	if(resp.content_type == "video/mp4" || resp.content_type == "audio/mp3")
+		resp.filename = getFileName(res);
+
 	Response httpRes(resp);
 	httpRes.sendResponse(clientFd);
+	close(clientFd);
 }
 
 void Resource::uploadFile(Request &httpReq, int clientFd) {
@@ -201,17 +128,19 @@ void Resource::uploadFile(Request &httpReq, int clientFd) {
 	httpRes.sendResponse(clientFd);
 }
 
-Resource::Resource(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
-	log(__FILE__,__LINE__,"Dispaching Resource", LOG);
-	std::string resourcePath = httpReq.getPath();
-	std::string method = httpReq.getMethod();
+Resource::Resource() {}
 
+Resource::Resource(Config &config) {
+	log(__FILE__,__LINE__,"Dispaching Resource", LOG);
+	std::string resourcePath = config.httpReq.getPath();
+	std::string method = config.httpReq.getMethod();
+	//
 	log(__FILE__,__LINE__,method.c_str(), LOG);
 	if (method == "GET") {
-		serveFile(httpReq, clientFd, server, connections);
+		serveFile(config);
 	}
-	else if (method == "POST")
-		uploadFile(httpReq, clientFd);
+	else if (method == "POST")//TODO POST HANDLING UPLOAD FILES AND ETC TO CGI
+		uploadFile(config.httpReq, config.clientFd);
 	// else if (method == "DELETE");
 		//TODO alguma coisa;
 }

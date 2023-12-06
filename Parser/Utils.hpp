@@ -1,31 +1,6 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#pragma once
 
-#include <string>
-#include <iostream>
-#include <stdlib.h>
-#include <vector>
-#include <sstream>
-#include <map>
-#include <algorithm>
-#include <fstream>
-#include <stdexcept>
-#include <cstdarg>
-#include <iomanip>
-
-#define RESET   "\033[0m"
-#define RED     "\033[31m"
-#define GREEN   "\033[32m"
-#define YELLOW  "\033[33m"
-#define BLUE    "\033[34m"
-
-enum LogLevel {
-    LOG,
-    WARNING,
-    ERROR,
-	LOGBLUE,
-	FAILED
-};
+#include "../Main.hpp"
 
 std::string trimString(const std::string& str);
 bool contains(std::vector<std::string> vector, std::string target);
@@ -40,5 +15,3 @@ void printVector(std::vector<std::string> vector);
 void log(const char *file, int line, const char *description, LogLevel level);
 const char* concat(int count, ...);
 std::string intToString(int value);
-
-#endif

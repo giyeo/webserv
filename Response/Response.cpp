@@ -3,6 +3,7 @@
 Response::Response(response_object &res): res(res) {}
 
 void Response::sendResponse(int clientFd) {
+	
 	std::string responseString = toString();
 	const char* buffer = responseString.c_str();
 	int size = responseString.size();
@@ -13,13 +14,12 @@ void Response::sendResponse(int clientFd) {
 		if (bytesSent < 0) {
 			std::cerr << "Waiting to send Chunk" << std::endl;
 		}
-		sleep(1); //TODO that blocks the sending, we should try to add this guy to a
-		//being sended list, storing the fd, responseString and bytes send
+		sleep(1);
 		totalSent += bytesSent;
 	}
 }
 
-void Response::notFoundResponse(int fd, std::string serverName, std::string path) {
+void Response::notFoundResponse(int fd, std::string serverName, std::string content) {
 	response_object resp;
 
 	resp.status_code = "302";
@@ -27,7 +27,7 @@ void Response::notFoundResponse(int fd, std::string serverName, std::string path
 	resp.date = __DATE__;
 	resp.server = serverName;
 	resp.content_type = "text/html";
-	resp.location = path;
+	resp.location = content;
 
 	Response httpRes(resp);
 	httpRes.sendResponse(fd);

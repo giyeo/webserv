@@ -1,19 +1,10 @@
-#ifndef SOCKETHANDLER_HPP
-#define SOCKETHANDLER_HPP
+#pragma once
 
-#include <iostream>
-#include <cstring>
-#include <cstdlib>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <cerrno>
-#include <cstdio>
-#include "../Parser/Parser.hpp"
-#include <fcntl.h>
+#include "../Parser/Server.hpp"
 
 class SocketHandler {
 	public:
+		SocketHandler();
 		SocketHandler(Server &server);
 		~SocketHandler();
 		
@@ -22,12 +13,10 @@ class SocketHandler {
 		void	socketBind();
 		void	socketListen();
 		int		getFd();
-		Server &server;
+		Server  server;
 	private:
 		int fd;
 		int port;
 		//N connection requests will be queued before further requests are refused
 		int nqueue;
 };
-
-#endif

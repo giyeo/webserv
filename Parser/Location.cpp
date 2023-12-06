@@ -1,6 +1,6 @@
 #include "Location.hpp"
-#include <iostream>
-#include <vector>
+
+Location::Location() {}
 
 void Location::parseRoot(std::string value){
 	std::vector<std::string> tokens = tokenizer(value, ' ');
