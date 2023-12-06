@@ -1,25 +1,24 @@
 #include "Master.hpp"
 
 void sendResponse(Config &config) {
+	t_event event = config.events[config.clientFd];
 
-	std::string responseString = config.events[config.clientFd].buffer;
+	std::string responseString = event.buffer;
 	const char* buffer = responseString.c_str();
-	int size = config.events[config.clientFd].bytes;
 
-	int totalSent = 0;
-	while (totalSent < size) {
-		int bytesSent = send(config.clientFd, buffer + totalSent, size - totalSent, 0);
-		if (bytesSent < 0) {
-			std::cerr << "Waiting to send Chunk" << std::endl;
+	while (event.totalSent < event.bytes) {
+		int bytesSent = send(config.clientFd, buffer + event.totalSent, event.bytes - event.totalSent, 0);
+		if (bytesSent < 0)
+			break;
+		event.totalSent += bytesSent;
+		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(bytesSent).c_str(), "/", intToString(event.totalSent).c_str()), LOG);
+		if (bytesSent == 0 || event.totalSent == event.bytes) {
+			log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
+			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
+			config.events.erase(config.clientFd);
+			close(config.clientFd);
 		}
-		sleep(1); //TODO that blocks the sending, we should try to add this guy to a
-		//being sended list, storing the fd, responseString and bytes send
-		totalSent += bytesSent;
-	} //TODO NON BLOCKING THIS PART RIGHT HERE.
-
-	epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
-	config.events.erase(config.clientFd);
-	close(config.clientFd);
+	}
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
