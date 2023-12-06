@@ -1,23 +1,37 @@
 #include "Master.hpp"
+#include <algorithm>
 
 void sendResponse(Config &config) {
-	t_event event = config.events[config.clientFd];
-
+	t_event &event = config.events[config.clientFd];
+	
 	std::string responseString = event.buffer;
 	const char* buffer = responseString.c_str();
-
+	
+	int bytesSent = 0;
 	while (event.totalSent < event.bytes) {
-		int bytesSent = send(config.clientFd, buffer + event.totalSent, event.bytes - event.totalSent, 0);
-		if (bytesSent < 0)
+		ssize_t maxChunkSize = std::min((ssize_t)4096, event.bytes - event.totalSent);
+		bytesSent = send(config.clientFd, buffer + event.totalSent, maxChunkSize, 0);
+		if (bytesSent < 0) {
+			log(__FILE__, __LINE__, "Waiting to write", LOG);
 			break;
+		}
 		event.totalSent += bytesSent;
-		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(bytesSent).c_str(), "/", intToString(event.totalSent).c_str()), LOG);
-		if (bytesSent == 0 || event.totalSent == event.bytes) {
+		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
+		if (event.totalSent == event.bytes) {
 			log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
 			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
 			config.events.erase(config.clientFd);
 			close(config.clientFd);
 		}
+		if (event.totalSent >= 16000) {
+            log(__FILE__, __LINE__, "Exiting the function early to re-enter epoll", LOG);
+			// epoll_event event;
+			// event.events = EPOLLOUT | EPOLLET;
+			// event.data.fd = config.clientFd;
+			// if (epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &event) == -1)
+			// 	log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);
+			break;
+        }
 	}
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
@@ -90,6 +104,8 @@ void clientForwarding(Config &config) {
 	unsigned long sendedRequestedBodySize = config.events[clientFd].bytes - config.events[clientFd].req.getHeadersLength();
 	if(config.events[clientFd].req.getContentLength() == sendedRequestedBodySize) {
 		log(__FILE__, __LINE__, "Data fully Received", LOG);
+		std::string requestBuffer = config.events[clientFd].buffer.substr(config.events[clientFd].req.getHeadersLength() , config.events[clientFd].buffer.size());
+		config.events[clientFd].req.requestBodyBuffer = requestBuffer;
 		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
 			Resource res(config);
 	}

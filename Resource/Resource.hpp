@@ -14,5 +14,5 @@ class Resource {
         int serveFile(Config &config);
 		bool ft_find(std::string str, std::string to_find) const;
 		void handleCGI(std::string finalPath, Request &httpReq, std::string serverName, int clientFd);
-		void uploadFile(Request &httpReq, int clientFd);
+		void uploadFile(Config &config);
 };

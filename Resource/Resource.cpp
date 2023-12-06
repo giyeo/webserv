@@ -72,7 +72,7 @@ int	Resource::serveFile(Config &config) {
 	config.events[clientFd].bytes = buffer.size();
 
 	struct epoll_event ev;
-	ev.events = EPOLLOUT | EPOLLET;
+	ev.events = EPOLLOUT;
 	ev.data.fd = clientFd;
 	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, clientFd, &ev);
 	return 1;
@@ -110,14 +110,15 @@ void Resource::handleCGI(std::string finalPath, Request &httpReq, std::string se
 	close(clientFd);
 }
 
-void Resource::uploadFile(Request &httpReq, int clientFd) {
+void Resource::uploadFile(Config &config) {
 	response_object resp;
-	std::string fileContent = httpReq.requestBodyBuffer;
+	int clientFd = config.clientFd;
+	std::string fileContent = config.events[clientFd].req.requestBodyBuffer;
 
 	resp.http_version = "1.1";
 	resp.status_code = "200";
 	resp.status_text = "OK";
-	resp.content_type = httpReq.getHeaderValue("Content-Type");
+	resp.content_type = config.httpReq.getHeaderValue("Content-Type");
 	resp.content_length = itos(fileContent.length());
 	resp.date = "2023-09-20T00:31:02.612Z";
 	resp.server = "webserv";
@@ -125,7 +126,15 @@ void Resource::uploadFile(Request &httpReq, int clientFd) {
 	resp.response_body = fileContent;
 
 	Response httpRes(resp);
-	httpRes.sendResponse(clientFd);
+	std::string buffer = httpRes.toString();
+
+	config.events[clientFd].buffer = buffer;
+	config.events[clientFd].bytes = buffer.size();
+
+	struct epoll_event ev;
+	ev.events = EPOLLOUT;
+	ev.data.fd = clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, clientFd, &ev);
 }
 
 Resource::Resource() {}
@@ -140,7 +149,7 @@ Resource::Resource(Config &config) {
 		serveFile(config);
 	}
 	else if (method == "POST")//TODO POST HANDLING UPLOAD FILES AND ETC TO CGI
-		uploadFile(config.httpReq, config.clientFd);
+		uploadFile(config);
 	// else if (method == "DELETE");
 		//TODO alguma coisa;
 }
