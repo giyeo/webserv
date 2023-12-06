@@ -14,8 +14,7 @@ void Response::sendResponse(int clientFd) {
 		if (bytesSent < 0) {
 			std::cerr << "Waiting to send Chunk" << std::endl;
 		}
-		sleep(1); //TODO that blocks the sending, we should try to add this guy to a
-		//being sended list, storing the fd, responseString and bytes send
+		sleep(1);
 		totalSent += bytesSent;
 	}
 }

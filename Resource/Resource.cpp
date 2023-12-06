@@ -1,23 +1,5 @@
 #include "Resource.hpp"
 
-void sendResponse(Config &config) {
-
-	std::string responseString = config.events[config.clientFd].buffer;
-	const char* buffer = responseString.c_str();
-	int size = config.events[config.clientFd].bytes;
-
-	int totalSent = 0;
-	while (totalSent < size) {
-		int bytesSent = send(config.clientFd, buffer + totalSent, size - totalSent, 0);
-		if (bytesSent < 0) {
-			std::cerr << "Waiting to send Chunk" << std::endl;
-		}
-		sleep(1); //TODO that blocks the sending, we should try to add this guy to a
-		//being sended list, storing the fd, responseString and bytes send
-		totalSent += bytesSent;
-	} //TODO NON BLOCKING THIS PART RIGHT HERE.
-}
-
 std::string getContentType(std::string finalPath) {
 	std::map<std::string, std::string> fileMimeMap;
 	fileMimeMap[".txt"] = "text/plain";
@@ -85,11 +67,14 @@ int	Resource::serveFile(Config &config) {
 
 	Response httpRes(resp);
 	std::string buffer = httpRes.toString();
-	config.events[clientFd].state = TOSEND;
+
 	config.events[clientFd].buffer = buffer;
 	config.events[clientFd].bytes = buffer.size();
-	sendResponse(config);
-	close(clientFd);
+
+	struct epoll_event ev;
+	ev.events = EPOLLOUT | EPOLLET;
+	ev.data.fd = clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, clientFd, &ev);
 	return 1;
 }
 

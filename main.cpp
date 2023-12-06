@@ -1,5 +1,28 @@
 #include "Master.hpp"
 
+void sendResponse(Config &config) {
+
+	std::string responseString = config.events[config.clientFd].buffer;
+	const char* buffer = responseString.c_str();
+	int size = config.events[config.clientFd].bytes;
+
+	int totalSent = 0;
+	while (totalSent < size) {
+		int bytesSent = send(config.clientFd, buffer + totalSent, size - totalSent, 0);
+		if (bytesSent < 0) {
+			std::cerr << "Waiting to send Chunk" << std::endl;
+		}
+		sleep(1); //TODO that blocks the sending, we should try to add this guy to a
+		//being sended list, storing the fd, responseString and bytes send
+		totalSent += bytesSent;
+	} //TODO NON BLOCKING THIS PART RIGHT HERE.
+
+	epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
+	config.events.erase(config.clientFd);
+	close(config.clientFd);
+	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
+}
+
 int create_epoll(std::vector<SocketHandler> &serversSocket) {
 	int epollFd = 0;
 
@@ -71,48 +94,35 @@ void clientForwarding(Config &config) {
 		log(__FILE__, __LINE__, "Data fully Received", LOG);
 		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
 			Resource res(config);
-		epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-		config.events.erase(clientFd);
-		close(clientFd);
 	}
 }
 
 void clientEvent(Config &config) {
-	std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";
-	log(__FILE__, __LINE__, concat(2,"Client event Arrived, fd: ",intToString(config.serverFd).c_str()) , LOGBLUE);
-	
-	ssize_t bytesRead;
-	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
 	int clientFd = config.clientFd;
+	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
 	char buffer[8196];
-	
-	if(config.events[clientFd].state == SENDING) {
-		return ;
+	ssize_t bytesRead;
+
+	while ((bytesRead = recv(clientFd, buffer, sizeof(buffer), 0)) > 0) {
+		buffer[bytesRead] = '\0';
+		if(config.events[clientFd].req.getMethod().empty()) {
+			Request httpReq((const char *)&buffer, atoi(serverSocket.server.clientMaxBodySize.c_str()));
+			config.events[clientFd].req = httpReq;
+			config.httpReq = httpReq;
+		}
+		config.events[clientFd].buffer.append(buffer);
+		config.events[clientFd].bytes += bytesRead;
 	}
 
-	if(config.events[clientFd].state == TOREAD || config.events[clientFd].state == READING) {
-		while ((bytesRead = recv(clientFd, buffer, sizeof(buffer), 0)) > 0) {
-			buffer[bytesRead] = '\0';
-			if(config.events[clientFd].req.getMethod().empty()) {
-				Request httpReq((const char *)&buffer, atoi(serverSocket.server.clientMaxBodySize.c_str()));
-				config.events[clientFd].req = httpReq;
-				config.httpReq = httpReq;
-				config.events[clientFd].state = READING;
-			}
-			config.events[clientFd].buffer.append(buffer);
-			config.events[clientFd].bytes += bytesRead;
-		}
-
-		if (bytesRead == 0) {
-			log(__FILE__,__LINE__,"Connection closed by client", LOG);
-			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-			config.events.erase(clientFd);
-			close(clientFd);
-		}
-
-		if (config.events[clientFd].bytes > 0)
-			clientForwarding(config);
+	if (bytesRead == 0) {
+		log(__FILE__,__LINE__,"Connection closed by client", LOG);
+		epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+		config.events.erase(clientFd);
+		close(clientFd);
 	}
+
+	if (config.events[clientFd].bytes > 0)
+		clientForwarding(config);
 	
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
@@ -136,13 +146,10 @@ bool eventFdIsServerSocket(int fd, std::vector<SocketHandler> serversSockets) {
 void buildEvent(Config &config, int eventFd) {
 	if (eventFdIsServerSocket(eventFd, config.serverSockets)) {
 		config.events[eventFd].type = SERVER;
-		config.events[eventFd].state = TOREAD;
 		config.events[eventFd].fd[SERVER] = eventFd;
 	}
 	else {
 		config.events[eventFd].type = CLIENT;
-		if(config.events[eventFd].state == NONE)
-			config.events[eventFd].state = TOREAD;
 		config.events[eventFd].fd[CLIENT] = eventFd;
 	}
 }
@@ -168,11 +175,21 @@ void createEventPoll(Config &config) {
 				serverEvent(config);
 			}
 			if (type == CLIENT) {
+				std::cout << "■■■■■■■■■■■■■■■■■ " << __TIMESTAMP__ << " ■■■■■■■■■■■■■■■■■\n";	
+				log(__FILE__, __LINE__, concat(2,"Client event Arrived, fd: ",intToString(eventFd).c_str()) , LOGBLUE);
+
 				config.clientFd = eventFd;
-				config.serverFd = config.events[eventFd].fd[SERVER];
-				config.serverSocketIndex = getServerByFd(config.serverFd, config.serverSockets);
-				config.server = config.serverSockets[config.serverSocketIndex];
-				clientEvent(config);
+				if(events[i].events & EPOLLIN) {
+					log(__FILE__, __LINE__, "Reading from ClientFd", WARNING);
+					config.serverFd = config.events[eventFd].fd[SERVER];
+					config.serverSocketIndex = getServerByFd(config.serverFd, config.serverSockets);
+					config.server = config.serverSockets[config.serverSocketIndex];
+					clientEvent(config);
+				}
+				if(events[i].events & EPOLLOUT) {
+					log(__FILE__, __LINE__, "Sending on ClientFd", WARNING);
+					sendResponse(config);
+				}
 			}
 		}
 	}

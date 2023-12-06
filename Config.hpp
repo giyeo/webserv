@@ -18,12 +18,11 @@
 
 typedef struct s_event {
 	int type;
-	int state;
 	int fd[2];
 	std::string buffer;
 	ssize_t bytes;
 	Request req;
-	s_event() : type(NONE), state(NONE), bytes(0) {}
+	s_event() : type(NONE), bytes(0) {}
 }	t_event;
 
 class Config {
