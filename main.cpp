@@ -50,16 +50,31 @@ void serverEvent(Config &config) {
 	log(__FILE__, __LINE__, concat(2,"Server event Arrived, fd: ",intToString(config.serverFd).c_str()), LOGBLUE);
 	epoll_event event;
 
-	int client_socket = createClientSocket(config.serverFd);
+	int clientFd = createClientSocket(config.serverFd);
 
-	config.print();
 	event.events = EPOLLIN | EPOLLET;
-	event.data.fd = client_socket;
-	if (epoll_ctl(config.epollFd, EPOLL_CTL_ADD, client_socket, &event) == -1)
+	event.data.fd = clientFd;
+	if (epoll_ctl(config.epollFd, EPOLL_CTL_ADD, clientFd, &event) == -1)
 		log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);
-	config.whoswho[client_socket] = config.serverFd;
-	log(__FILE__,__LINE__,concat(2, "Client Connected, fd:", intToString(client_socket).c_str()), LOG);
+	config.events[clientFd].fd[SERVER] = config.serverFd;
+	log(__FILE__,__LINE__,concat(2, "Client Connected, fd:", intToString(clientFd).c_str()), LOG);
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
+}
+
+void clientForwarding(Config &config) {
+	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
+	int clientFd = config.clientFd;
+
+	log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(config.connectionHeaders[clientFd].totalBytesRead).c_str(), " bytes"), WARNING);
+	unsigned long sendedRequestedBodySize = config.connectionHeaders[clientFd].totalBytesRead - config.connectionHeaders[clientFd].getHeadersLength();
+	if(config.connectionHeaders[clientFd].getContentLength() == sendedRequestedBodySize) {
+		log(__FILE__, __LINE__, "Data fully Received", LOG);
+		if(config.connectionHeaders[clientFd].parseRequestBody(clientFd, serverSocket.server.serverName[0]))
+			Resource res(config);
+		epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+		config.connectionHeaders.erase(clientFd);
+		close(clientFd);
+	}
 }
 
 void clientEvent(Config &config) {
@@ -70,39 +85,36 @@ void clientEvent(Config &config) {
 	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
 	int clientFd = config.clientFd;
 	char buffer[8196];
+	
+	if(config.events[clientFd].state == SENDING) {
+		return ;
+	}
 
-	while ((bytesRead = recv(clientFd, buffer, sizeof(buffer), 0)) > 0) {
-		buffer[bytesRead] = '\0';
-		std::map<int, Request>::iterator it = config.connectionHeaders.find(clientFd);
-		if(it == config.connectionHeaders.end()) {
-			Request httpReq((const char *)&buffer, atoi(serverSocket.server.clientMaxBodySize.c_str()));
-			config.connectionHeaders[clientFd] = httpReq;
-			config.httpReq = httpReq;
+	if(config.events[clientFd].state == TOREAD || config.events[clientFd].state == READING) {
+		while ((bytesRead = recv(clientFd, buffer, sizeof(buffer), 0)) > 0) {
+			buffer[bytesRead] = '\0';
+			std::map<int, Request>::iterator it = config.connectionHeaders.find(clientFd);
+			if(it == config.connectionHeaders.end()) {
+				Request httpReq((const char *)&buffer, atoi(serverSocket.server.clientMaxBodySize.c_str()));
+				config.connectionHeaders[clientFd] = httpReq;
+				config.httpReq = httpReq;
+				config.events[clientFd].state = READING;
+			}
+			config.connectionHeaders[clientFd].requestBodyBuffer.append(buffer);
+			config.connectionHeaders[clientFd].totalBytesRead += bytesRead;
 		}
-		config.connectionHeaders[clientFd].requestBodyBuffer.append(buffer);
-		config.connectionHeaders[clientFd].totalBytesRead += bytesRead;
-	}
 
-	if (bytesRead == 0) {
-		log(__FILE__,__LINE__,"Connection closed by client", LOG);
-		epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-		config.connectionHeaders.erase(clientFd);
-		close(clientFd);
-	}
-
-	if (config.connectionHeaders[clientFd].totalBytesRead > 0) {
-		log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(config.connectionHeaders[clientFd].totalBytesRead).c_str(), " bytes"), WARNING);
-
-		unsigned long sendedRequestedBodySize = config.connectionHeaders[clientFd].totalBytesRead - config.connectionHeaders[clientFd].getHeadersLength();
-		if(config.connectionHeaders[clientFd].getContentLength() == sendedRequestedBodySize) {
-			log(__FILE__, __LINE__, "Data fully Received", LOG);
-			if(config.connectionHeaders[clientFd].parseRequestBody(clientFd, serverSocket.server.serverName[0]))
-				Resource res(config);
+		if (bytesRead == 0) {
+			log(__FILE__,__LINE__,"Connection closed by client", LOG);
 			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
 			config.connectionHeaders.erase(clientFd);
 			close(clientFd);
 		}
+
+		if (config.connectionHeaders[clientFd].totalBytesRead > 0)
+			clientForwarding(config);
 	}
+	
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
@@ -122,6 +134,20 @@ bool eventFdIsServerSocket(int fd, std::vector<SocketHandler> serversSockets) {
 	return false;
 }
 
+void buildEvent(Config &config, int eventFd) {
+	if (eventFdIsServerSocket(eventFd, config.serverSockets)) {
+		config.events[eventFd].type = SERVER;
+		config.events[eventFd].state = TOREAD;
+		config.events[eventFd].fd[SERVER] = eventFd;
+	}
+	else {
+		config.events[eventFd].type = CLIENT;
+		if(config.events[eventFd].state == NONE)
+			config.events[eventFd].state = TOREAD;
+		config.events[eventFd].fd[CLIENT] = eventFd;
+	}
+}
+
 void createEventPoll(Config &config) {
 	config.epollFd = create_epoll(config.serverSockets);
 	epoll_event events[MAX_EVENTS];
@@ -134,13 +160,17 @@ void createEventPoll(Config &config) {
 			log(__FILE__,__LINE__,"Epoll Failed", ERROR);
 		}
 		for (int i = 0; i < numEvents; ++i) {
-			if (eventFdIsServerSocket(events[i].data.fd, config.serverSockets)) {
-				config.serverFd = events[i].data.fd;
+			int eventFd = events[i].data.fd;
+			buildEvent(config, eventFd);
+			int type = config.events[eventFd].type;
+
+			if (type == SERVER) {
+				config.serverFd = eventFd;
 				serverEvent(config);
 			}
-			else {
-				config.clientFd = events[i].data.fd;
-				config.serverFd = config.whoswho[config.clientFd];
+			if (type == CLIENT) {
+				config.clientFd = eventFd;
+				config.serverFd = config.events[eventFd].fd[SERVER];
 				config.serverSocketIndex = getServerByFd(config.serverFd, config.serverSockets);
 				config.server = config.serverSockets[config.serverSocketIndex];
 				clientEvent(config);

@@ -6,20 +6,34 @@
 #include "Communication/SocketHandler.hpp"
 #include "Request/Request.hpp"
 
-typedef struct cgiInfo {
-	int clientFd;
-	bool isRead;
-}	t_cgiInfo;
+#define TOREAD 0
+#define READING 1
+#define TOSEND 3
+#define SENDING 4
+
+#define NONE -1
+#define CLIENT 0
+#define SERVER 1
+#define SERVICE 2
+
+typedef struct s_event {
+	int type;
+	int state;
+	int fd[2];
+	std::string buffer;
+	ssize_t bytes;
+	Request req;
+	s_event() : type(NONE), state(NONE) {}
+}	t_event;
 
 class Config {
 	public:
 		Config();
 		void print();
 		
-		t_cgiInfo cgiInfo;
+		std::map<int, t_event> events;
 		std::map<int, Request> connectionHeaders;
-		std::map<int, t_cgiInfo> cgiConnections;
-		std::map<int, int> whoswho;
+
 		std::vector<SocketHandler> serverSockets;
 		std::vector<Server> servers;
 
