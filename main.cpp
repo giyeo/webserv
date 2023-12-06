@@ -65,14 +65,14 @@ void clientForwarding(Config &config) {
 	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
 	int clientFd = config.clientFd;
 
-	log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(config.connectionHeaders[clientFd].totalBytesRead).c_str(), " bytes"), WARNING);
-	unsigned long sendedRequestedBodySize = config.connectionHeaders[clientFd].totalBytesRead - config.connectionHeaders[clientFd].getHeadersLength();
-	if(config.connectionHeaders[clientFd].getContentLength() == sendedRequestedBodySize) {
+	log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(config.events[clientFd].bytes).c_str(), " bytes"), WARNING);
+	unsigned long sendedRequestedBodySize = config.events[clientFd].bytes - config.events[clientFd].req.getHeadersLength();
+	if(config.events[clientFd].req.getContentLength() == sendedRequestedBodySize) {
 		log(__FILE__, __LINE__, "Data fully Received", LOG);
-		if(config.connectionHeaders[clientFd].parseRequestBody(clientFd, serverSocket.server.serverName[0]))
+		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
 			Resource res(config);
 		epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-		config.connectionHeaders.erase(clientFd);
+		config.events.erase(clientFd);
 		close(clientFd);
 	}
 }
@@ -93,25 +93,24 @@ void clientEvent(Config &config) {
 	if(config.events[clientFd].state == TOREAD || config.events[clientFd].state == READING) {
 		while ((bytesRead = recv(clientFd, buffer, sizeof(buffer), 0)) > 0) {
 			buffer[bytesRead] = '\0';
-			std::map<int, Request>::iterator it = config.connectionHeaders.find(clientFd);
-			if(it == config.connectionHeaders.end()) {
+			if(config.events[clientFd].req.getMethod().empty()) {
 				Request httpReq((const char *)&buffer, atoi(serverSocket.server.clientMaxBodySize.c_str()));
-				config.connectionHeaders[clientFd] = httpReq;
+				config.events[clientFd].req = httpReq;
 				config.httpReq = httpReq;
 				config.events[clientFd].state = READING;
 			}
-			config.connectionHeaders[clientFd].requestBodyBuffer.append(buffer);
-			config.connectionHeaders[clientFd].totalBytesRead += bytesRead;
+			config.events[clientFd].buffer.append(buffer);
+			config.events[clientFd].bytes += bytesRead;
 		}
 
 		if (bytesRead == 0) {
 			log(__FILE__,__LINE__,"Connection closed by client", LOG);
 			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-			config.connectionHeaders.erase(clientFd);
+			config.events.erase(clientFd);
 			close(clientFd);
 		}
 
-		if (config.connectionHeaders[clientFd].totalBytesRead > 0)
+		if (config.events[clientFd].bytes > 0)
 			clientForwarding(config);
 	}
 	

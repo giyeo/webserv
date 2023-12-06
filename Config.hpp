@@ -23,7 +23,7 @@ typedef struct s_event {
 	std::string buffer;
 	ssize_t bytes;
 	Request req;
-	s_event() : type(NONE), state(NONE) {}
+	s_event() : type(NONE), state(NONE), bytes(0) {}
 }	t_event;
 
 class Config {
@@ -32,7 +32,6 @@ class Config {
 		void print();
 		
 		std::map<int, t_event> events;
-		std::map<int, Request> connectionHeaders;
 
 		std::vector<SocketHandler> serverSockets;
 		std::vector<Server> servers;

@@ -46,7 +46,7 @@ int	Resource::serveFile(Config &config) {
 	if(fileContent == "") {
 		std::string pathErrorPage = finalPath.errorPage;
 		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
-		config.connectionHeaders.erase(clientFd);
+		config.events.erase(clientFd);
 		Response::notFoundResponse(clientFd, serverName, pathErrorPage);
 		close(clientFd);
 		return -1;
@@ -131,7 +131,6 @@ Resource::Resource(Config &config) {
 	log(__FILE__,__LINE__,method.c_str(), LOG);
 	if (method == "GET") {
 		serveFile(config);
-		// serveFile(config.httpReq, config.clientFd, config.serverSockets[config.serverSocketIndex], config.connectionHeaders);
 	}
 	else if (method == "POST")
 		uploadFile(config.httpReq, config.clientFd);
