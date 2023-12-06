@@ -84,9 +84,8 @@ void serverEvent(Config &config) {
 }
 
 void clientForwarding(Config &config) {
-	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
+	SocketHandler serverSocket = config.server;
 	int clientFd = config.clientFd;
-
 	log(__FILE__, __LINE__, concat(3, "Received data: ", intToString(config.events[clientFd].bytes).c_str(), " bytes"), WARNING);
 	unsigned long sendedRequestedBodySize = config.events[clientFd].bytes - config.events[clientFd].req.getHeadersLength();
 	if(config.events[clientFd].req.getContentLength() == sendedRequestedBodySize) {
@@ -98,7 +97,7 @@ void clientForwarding(Config &config) {
 
 void clientEvent(Config &config) {
 	int clientFd = config.clientFd;
-	SocketHandler serverSocket = config.serverSockets[config.serverSocketIndex];
+	SocketHandler serverSocket = config.server;
 	char buffer[8196];
 	ssize_t bytesRead;
 
@@ -126,13 +125,13 @@ void clientEvent(Config &config) {
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
-int getServerByFd(int fd, std::vector<SocketHandler> serverSockets) {
+SocketHandler getServerByFd(int fd, std::vector<SocketHandler> serverSockets) {
 	for(size_t i = 0; i < serverSockets.size(); i++) {
 		if (fd == serverSockets[i].getFd())
-			return i;
+			return serverSockets[i];
 	}
 	log(__FILE__, __LINE__, "Socket not Found in Servers Socket list given Socket Id", ERROR);
-	return 0;
+	exit(1);
 }
 
 bool eventFdIsServerSocket(int fd, std::vector<SocketHandler> serversSockets) {
@@ -181,8 +180,7 @@ void createEventPoll(Config &config) {
 				if(events[i].events & EPOLLIN) {
 					log(__FILE__, __LINE__, "Reading from ClientFd", WARNING);
 					config.serverFd = config.events[eventFd].fd[SERVER];
-					config.serverSocketIndex = getServerByFd(config.serverFd, config.serverSockets);
-					config.server = config.serverSockets[config.serverSocketIndex];
+					config.server = getServerByFd(config.serverFd, config.serverSockets);
 					clientEvent(config);
 				}
 				if(events[i].events & EPOLLOUT) {

@@ -33,7 +33,6 @@ class Config {
 		void print();
 		
 		std::map<int, t_event> events;
-
 		std::vector<SocketHandler> serverSockets;
 		std::vector<Server> servers;
 
@@ -43,7 +42,6 @@ class Config {
 		int epollFd;
 		int serverFd;
 		int clientFd;
-		int serverSocketIndex;
 		
 };
 

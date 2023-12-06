@@ -139,7 +139,7 @@ Resource::Resource(Config &config) {
 	if (method == "GET") {
 		serveFile(config);
 	}
-	else if (method == "POST")
+	else if (method == "POST")//TODO POST HANDLING UPLOAD FILES AND ETC TO CGI
 		uploadFile(config.httpReq, config.clientFd);
 	// else if (method == "DELETE");
 		//TODO alguma coisa;
