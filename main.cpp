@@ -22,13 +22,16 @@ void sendResponse(Config &config) {
 		event.totalSent += bytesSent;
 		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
 		if (event.totalSent == event.bytes) {
-			if(event.type == SERVICE)
+			if(event.type == SERVICE) {
+				log(__FILE__, __LINE__, "Success on Sending to the service, Erasing event, removing from epoll", LOG);
 				pclose(config.events[clientFd].fp);
-			log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
+			}
 			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
 			config.events.erase(config.clientFd);
-			if(event.type != SERVICE)
+			if(event.type != SERVICE) {
+				log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
 				close(config.clientFd);
+			}
 		}
 		if (event.totalSent >= 16000) {
 			log(__FILE__, __LINE__, "Exiting the function early to re-enter epoll", LOG);
