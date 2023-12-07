@@ -17,10 +17,9 @@ typedef struct s_event {
 	std::string buffer;
 	ssize_t bytes;
 	ssize_t totalSent;
-	ssize_t totalLeft;
 	Request req;
 	FILE *fp;
-	s_event() : type(NONE), bytes(0), totalSent(0), totalLeft(0), fp(NULL) {}
+	s_event() : type(NONE), bytes(0), totalSent(0), fp(NULL) {}
 }	t_event;
 
 class Config {

@@ -9,7 +9,7 @@ class Request {
 		Request(const char *recv, size_t maxBodySize);
 		~Request();
 		void parseRequestLineAndHeaders(const char *recv);
-		bool parseRequestBody(int clientFd, std::string serverName);
+		bool parseRequestBody();
 
 		std::string getMethod() const;
 		std::string getPath() const;

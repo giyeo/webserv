@@ -70,7 +70,7 @@ void clientForwarding(Config &config) {
 		log(__FILE__, __LINE__, "Data fully Received", LOG);
 		std::string requestBuffer = config.events[clientFd].buffer.substr(config.events[clientFd].req.getHeadersLength() , config.events[clientFd].buffer.size());
 		config.events[clientFd].req.requestBodyBuffer = requestBuffer;
-		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
+		if(config.events[clientFd].req.parseRequestBody())
 			Resource res(config);
 		else
 			maxBodySizeResponse(config);
@@ -138,6 +138,28 @@ void buildEvent(Config &config, int eventFd) {
 	}
 }
 
+void readFromService(Config &config) {
+	int clientFd = config.clientFd;
+	t_event &event = config.events[clientFd];
+	char buffer[8196];
+	log(__FILE__, __LINE__, "HERE", FAILED);
+    // Read data from the process using fread
+    size_t bytesRead;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), event.fp)) > 0) {
+        // Process or print the data as needed
+		event.buffer.append(buffer);
+		event.bytes += bytesRead;
+	}
+	// Close the pipe
+	pclose(event.fp);
+	event.type = CLIENT;
+	event.fp = NULL;
+	struct epoll_event ev;
+	ev.events = EPOLLOUT;
+	ev.data.fd = config.clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &ev);
+}
+
 void createEventPoll(Config &config) {
 	config.epollFd = create_epoll(config.serverSockets);
 	epoll_event events[MAX_EVENTS];
@@ -150,6 +172,7 @@ void createEventPoll(Config &config) {
 			log(__FILE__,__LINE__,"Epoll Failed", ERROR);
 		}
 		for (int i = 0; i < numEvents; ++i) {
+			log(__FILE__, __LINE__, "HERE", FAILED);
 			int eventFd = events[i].data.fd;
 			buildEvent(config, eventFd);
 			int type = config.events[eventFd].type;
@@ -177,6 +200,10 @@ void createEventPoll(Config &config) {
 				if(events[i].events & EPOLLOUT) {
 					log(__FILE__, __LINE__, "Sending on ServiceFd", WARNING);
 					sendToClientOrService(config, "");
+				}
+				if(events[i].events & EPOLLIN) {
+					log(__FILE__, __LINE__, "Reading from ServiceFd", WARNING);
+					readFromService(config);
 				}
 			}
 		}

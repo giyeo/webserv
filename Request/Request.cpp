@@ -8,7 +8,7 @@ Request::Request(const char *recv, size_t maxBodySize) : totalBytesRead(0), head
 	parseRequestLineAndHeaders(recv);
 }
 
-bool Request::parseRequestBody(int clientFd, std::string serverName) {
+bool Request::parseRequestBody() {
 	const char *recv = requestBodyBuffer.c_str();
 	contentLength = headersLength["Content-Length"];
 	if(contentLength > maxBodySize) {

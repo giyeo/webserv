@@ -83,9 +83,10 @@ void Resource::handleCGI(Config &config, std::string finalPath) {
 
 	setenv("CLIENT_FD", intToString(clientFd).c_str(), 1);
 	setenv("REQUEST_METHOD", config.httpReq.getMethod().c_str(), 1);
-	FILE *fp = popen(command.c_str(), "w");
+	FILE *fp = popen(command.c_str(), "r+");
 	if (fp == NULL) {
 		std::cerr << "Error opening pipe" << std::endl;
+		]
 		exit(EXIT_FAILURE);
 	}
 
@@ -96,7 +97,7 @@ void Resource::handleCGI(Config &config, std::string finalPath) {
 	config.events[clientFd].fp = fp;
 
 	epoll_event event;
-	event.events = EPOLLOUT | EPOLLET;
+	event.events = EPOLLOUT;
 	event.data.fd = config.clientFd;
 	if (epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &event) == -1)
 		log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);

@@ -22,15 +22,28 @@ void sendToClientOrService(Config &config, std::string errorString) {
 		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
 		if (event.totalSent == event.bytes) {
 			if(event.type == SERVICE) {
-				log(__FILE__, __LINE__, "Success on Sending to the service, Erasing event, removing from epoll", LOG);
-				pclose(config.events[clientFd].fp);
+				epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
+				log(__FILE__, __LINE__, "Success on Sending to the service", LOG);
+				int serviceFd = fileno(event.fp);
+				config.events[serviceFd].type = SERVICE;
+				config.events[serviceFd].fd[CLIENT] = clientFd;
+				config.events[serviceFd].fd[SERVICE] = serviceFd;
+				config.events[serviceFd].fd[SERVER] = event.fd[SERVER];
+				config.events[serviceFd].fp = event.fp;
+				std::cout << serviceFd << "\n";
+				struct epoll_event ev;
+				ev.events = EPOLLIN; 
+				ev.data.fd = serviceFd;
+				if(epoll_ctl(config.epollFd, EPOLL_CTL_ADD, config.clientFd, &ev) == -1)
+					perror("epoll_ctl");
 			}
-			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-			config.events.erase(clientFd);
 			if(event.type != SERVICE) {
+				epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+				config.events.erase(clientFd);
 				log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
 				close(clientFd);
 			}
+			break ;
 		}
 		if (event.totalSent >= 16000) {
 			log(__FILE__, __LINE__, "Exiting the function, re-enter epoll to keep non-blocking", LOG);
