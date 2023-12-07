@@ -1,6 +1,9 @@
 #pragma once
 
-#include "../Master.hpp"
+#include "../Main.hpp"
+#include "../Config.hpp"
+#include "../Response/Response.hpp"
+#include "GetPath.hpp"
 
 class Resource {
 	public:

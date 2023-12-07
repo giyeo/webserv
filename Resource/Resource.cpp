@@ -47,7 +47,7 @@ int	Resource::serveFile(Config &config) {
 		std::string pathErrorPage = finalPath.errorPage;
 		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
 		config.events.erase(clientFd);
-		Response::notFoundResponse(clientFd, serverName, pathErrorPage);
+		notFoundResponse(clientFd, serverName, pathErrorPage);
 		close(clientFd);
 		return -1;
 	}
@@ -65,8 +65,7 @@ int	Resource::serveFile(Config &config) {
 	if(resp.content_type == "video/mp4" || resp.content_type == "audio/mp3")
 		resp.filename = getFileName(finalPath.finalPath);
 
-	Response httpRes(resp);
-	std::string buffer = httpRes.toString();
+	std::string buffer = resToString(resp);
 
 	config.events[clientFd].buffer = buffer;
 	config.events[clientFd].bytes = buffer.size();
@@ -92,7 +91,7 @@ void Resource::handleCGI(Config &config, std::string finalPath) {
 		exit(EXIT_FAILURE);
 	}
 
-	std::string resbuffer = config.events[clientFd].buffer;  // httpRes.toString();
+	std::string resbuffer = config.events[clientFd].buffer;
 	config.events[clientFd].type = SERVICE;
 	config.events[clientFd].buffer = resbuffer;
 	config.events[clientFd].bytes = resbuffer.size();
@@ -120,8 +119,7 @@ void Resource::uploadFile(Config &config) {
 	resp.connection = "close";
 	resp.response_body = fileContent;
 
-	Response httpRes(resp);
-	std::string buffer = httpRes.toString();
+	std::string buffer = resToString(resp);
 
 	config.events[clientFd].buffer = buffer;
 	config.events[clientFd].bytes = buffer.size();

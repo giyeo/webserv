@@ -1,10 +1,7 @@
 #include "Response.hpp"
 
-Response::Response(response_object &res): res(res) {}
-
-void Response::sendResponse(int clientFd) {
+void sendResponse(int clientFd, std::string responseString) {
 	
-	std::string responseString = toString();
 	const char* buffer = responseString.c_str();
 	int size = responseString.size();
 
@@ -19,7 +16,47 @@ void Response::sendResponse(int clientFd) {
 	}
 }
 
-void Response::notFoundResponse(int fd, std::string serverName, std::string content) {
+void sendToClientOrService(Config &config) {
+	int clientFd = config.clientFd;
+	t_event &event = config.events[clientFd];
+	
+	std::string responseString = event.buffer;
+	const char* buffer = responseString.c_str();
+
+	int bytesSent = 0;
+	while (event.totalSent < event.bytes) {
+		ssize_t maxChunkSize = std::min((ssize_t)16384, event.bytes - event.totalSent);
+		if(event.type == SERVICE)
+			bytesSent = fwrite(buffer + event.totalSent, 1, maxChunkSize, config.events[clientFd].fp);
+		else
+			bytesSent = send(clientFd, buffer + event.totalSent, maxChunkSize, 0);
+		if (bytesSent < 0) {
+			log(__FILE__, __LINE__, "Waiting to write", LOG);
+			break;
+		}
+		event.totalSent += bytesSent;
+		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
+		if (event.totalSent == event.bytes) {
+			if(event.type == SERVICE) {
+				log(__FILE__, __LINE__, "Success on Sending to the service, Erasing event, removing from epoll", LOG);
+				pclose(config.events[clientFd].fp);
+			}
+			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+			config.events.erase(clientFd);
+			if(event.type != SERVICE) {
+				log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
+				close(clientFd);
+			}
+		}
+		if (event.totalSent >= 16000) {
+			log(__FILE__, __LINE__, "Exiting the function, re-enter epoll to keep non-blocking", LOG);
+			break;
+		}
+	}
+	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
+}
+
+void notFoundResponse(int fd, std::string serverName, std::string content) {
 	response_object resp;
 
 	resp.status_code = "302";
@@ -29,24 +66,22 @@ void Response::notFoundResponse(int fd, std::string serverName, std::string cont
 	resp.content_type = "text/html";
 	resp.location = content;
 
-	Response httpRes(resp);
-	httpRes.sendResponse(fd);
+	sendResponse(fd, resToString(resp));
 }
 
-void Response::maxBodySizeResponse(int fd, std::string serverName, size_t size) {
+void maxBodySizeResponse(int fd, std::string serverName) {
 	response_object resp;
 
 	resp.status_code = "413";
-	resp.status_text = "Request Entity Too Large: " + size;
+	resp.status_text = "Request Entity Too Large";
 	resp.date = __DATE__;
 	resp.server = serverName;
 	resp.content_type = "text/plain";
 
-	Response httpRes(resp);
-	httpRes.sendResponse(fd);
+	sendResponse(fd, resToString(resp));
 }
 
-std::string Response::toString() {
+std::string resToString(response_object &res) {
 	std::string response = "";
 	//Status Line
 	response.append("HTTP/")

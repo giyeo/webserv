@@ -1,45 +1,4 @@
 #include "Master.hpp"
-#include <algorithm>
-
-void sendResponse(Config &config) {
-	t_event &event = config.events[config.clientFd];
-	int clientFd = config.clientFd;
-	
-	std::string responseString = event.buffer;
-	const char* buffer = responseString.c_str();
-
-	int bytesSent = 0;
-	while (event.totalSent < event.bytes) {
-		ssize_t maxChunkSize = std::min((ssize_t)4096, event.bytes - event.totalSent);
-		if(event.type == SERVICE)
-			bytesSent = fwrite(buffer + event.totalSent, 1, maxChunkSize, config.events[clientFd].fp);
-		else
-			bytesSent = send(config.clientFd, buffer + event.totalSent, maxChunkSize, 0);
-		if (bytesSent < 0) {
-			log(__FILE__, __LINE__, "Waiting to write", LOG);
-			break;
-		}
-		event.totalSent += bytesSent;
-		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
-		if (event.totalSent == event.bytes) {
-			if(event.type == SERVICE) {
-				log(__FILE__, __LINE__, "Success on Sending to the service, Erasing event, removing from epoll", LOG);
-				pclose(config.events[clientFd].fp);
-			}
-			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
-			config.events.erase(config.clientFd);
-			if(event.type != SERVICE) {
-				log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
-				close(config.clientFd);
-			}
-		}
-		if (event.totalSent >= 16000) {
-			log(__FILE__, __LINE__, "Exiting the function early to re-enter epoll", LOG);
-			break;
-		}
-	}
-	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
-}
 
 int create_epoll(std::vector<SocketHandler> &serversSocket) {
 	int epollFd = 0;
@@ -113,6 +72,8 @@ void clientForwarding(Config &config) {
 		config.events[clientFd].req.requestBodyBuffer = requestBuffer;
 		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
 			Resource res(config);
+		else
+			maxBodySizeResponse(clientFd, serverSocket.server.serverName[0]);
 	}
 }
 
@@ -209,13 +170,13 @@ void createEventPoll(Config &config) {
 				}
 				if(events[i].events & EPOLLOUT) {
 					log(__FILE__, __LINE__, "Sending on ClientFd", WARNING);
-					sendResponse(config);
+					sendToClientOrService(config);
 				}
 			}
 			if (type == SERVICE) {
 				if(events[i].events & EPOLLOUT) {
 					log(__FILE__, __LINE__, "Sending on ServiceFd", WARNING);
-					sendResponse(config);
+					sendToClientOrService(config);
 				}
 			}
 		}

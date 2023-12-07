@@ -6,11 +6,6 @@
 #include "Communication/SocketHandler.hpp"
 #include "Request/Request.hpp"
 
-#define TOREAD 0
-#define READING 1
-#define TOSEND 3
-#define SENDING 4
-
 #define NONE -1
 #define CLIENT 0
 #define SERVER 1

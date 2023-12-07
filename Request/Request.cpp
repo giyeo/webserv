@@ -13,7 +13,6 @@ bool Request::parseRequestBody(int clientFd, std::string serverName) {
 	contentLength = headersLength["Content-Length"];
 	if(contentLength > maxBodySize) {
 		log(__FILE__, __LINE__, "maxBodySizeError", WARNING);
-		Response::maxBodySizeResponse(clientFd, serverName, maxBodySize);
 		return false;
 	}
 

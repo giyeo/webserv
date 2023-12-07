@@ -2,7 +2,6 @@
 
 #include "../Main.hpp"
 #include "../Parser/Utils.hpp"
-#include "../Response/Response.hpp"
 
 class Request {
 	public:
