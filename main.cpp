@@ -73,7 +73,7 @@ void clientForwarding(Config &config) {
 		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
 			Resource res(config);
 		else
-			maxBodySizeResponse(clientFd, serverSocket.server.serverName[0]);
+			maxBodySizeResponse(config);
 	}
 }
 
@@ -170,13 +170,13 @@ void createEventPoll(Config &config) {
 				}
 				if(events[i].events & EPOLLOUT) {
 					log(__FILE__, __LINE__, "Sending on ClientFd", WARNING);
-					sendToClientOrService(config);
+					sendToClientOrService(config, "");
 				}
 			}
 			if (type == SERVICE) {
 				if(events[i].events & EPOLLOUT) {
 					log(__FILE__, __LINE__, "Sending on ServiceFd", WARNING);
-					sendToClientOrService(config);
+					sendToClientOrService(config, "");
 				}
 			}
 		}

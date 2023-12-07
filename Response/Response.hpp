@@ -39,6 +39,6 @@ typedef struct s_response {
 
 std::string resToString(response_object &res);
 void sendResponse(int clientFd);
-void notFoundResponse(int fd, std::string serverName, std::string content);
-void maxBodySizeResponse(int fd, std::string serverName);
-void sendToClientOrService(Config &config);
+void notFoundResponse(Config &config, std::string content);
+void maxBodySizeResponse(Config &config);
+void sendToClientOrService(Config &config, std::string errorString);

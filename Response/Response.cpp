@@ -1,26 +1,10 @@
 #include "Response.hpp"
 
-void sendResponse(int clientFd, std::string responseString) {
-	
-	const char* buffer = responseString.c_str();
-	int size = responseString.size();
-
-	int totalSent = 0;
-	while (totalSent < size) {
-		int bytesSent = send(clientFd, buffer + totalSent, size - totalSent, 0);
-		if (bytesSent < 0) {
-			std::cerr << "Waiting to send Chunk" << std::endl;
-		}
-		sleep(1);
-		totalSent += bytesSent;
-	}
-}
-
-void sendToClientOrService(Config &config) {
+void sendToClientOrService(Config &config, std::string errorString) {
 	int clientFd = config.clientFd;
 	t_event &event = config.events[clientFd];
 	
-	std::string responseString = event.buffer;
+	std::string responseString = (errorString.empty()) ? event.buffer : errorString;
 	const char* buffer = responseString.c_str();
 
 	int bytesSent = 0;
@@ -56,29 +40,43 @@ void sendToClientOrService(Config &config) {
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
 
-void notFoundResponse(int fd, std::string serverName, std::string content) {
+void notFoundResponse(Config &config, std::string content) {
 	response_object resp;
 
 	resp.status_code = "302";
 	resp.status_text = "Moved Temporarily";
 	resp.date = __DATE__;
-	resp.server = serverName;
+	resp.server = config.server.server.serverName[0];
 	resp.content_type = "text/html";
 	resp.location = content;
 
-	sendResponse(fd, resToString(resp));
+	std::string errorResponseString = resToString(resp);
+	config.events[config.clientFd].buffer = errorResponseString;
+	config.events[config.clientFd].bytes = errorResponseString.size();
+
+	struct epoll_event ev;
+	ev.events = EPOLLOUT;
+	ev.data.fd = config.clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &ev);
 }
 
-void maxBodySizeResponse(int fd, std::string serverName) {
+void maxBodySizeResponse(Config &config) {
 	response_object resp;
 
 	resp.status_code = "413";
 	resp.status_text = "Request Entity Too Large";
 	resp.date = __DATE__;
-	resp.server = serverName;
+	resp.server = config.server.server.serverName[0];
 	resp.content_type = "text/plain";
 
-	sendResponse(fd, resToString(resp));
+	std::string errorResponseString = resToString(resp);
+	config.events[config.clientFd].buffer = errorResponseString;
+	config.events[config.clientFd].bytes = errorResponseString.size();
+
+	struct epoll_event ev;
+	ev.events = EPOLLOUT;
+	ev.data.fd = config.clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &ev);
 }
 
 std::string resToString(response_object &res) {

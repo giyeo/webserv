@@ -31,7 +31,7 @@ std::string getFileName(std::string finalPath) {
 }
 
 // int	Resource::serveFile(Request &httpReq, int clientFd, SocketHandler &server, std::map<int, Request> &connections) {
-int	Resource::serveFile(Config &config) {	
+void Resource::serveFile(Config &config) {	
 	response_object resp;
 	std::string serverRoot = config.server.server.root;
 	std::string uri = config.httpReq.getPath();
@@ -47,15 +47,14 @@ int	Resource::serveFile(Config &config) {
 		std::string pathErrorPage = finalPath.errorPage;
 		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
 		config.events.erase(clientFd);
-		notFoundResponse(clientFd, serverName, pathErrorPage);
-		close(clientFd);
-		return -1;
+		notFoundResponse(config, pathErrorPage);
+		return ;
 	}
 
 	if (ft_find(finalPath.finalPath, ".py") && finalPath.locationIndex != -1) {
 		if(config.server.server.locations[finalPath.locationIndex].proxyPass == finalPath.filename)
 			handleCGI(config, finalPath.finalPath);
-		return 1;
+		return ;
 	}
 
 	resp.content_type = getContentType(finalPath.finalPath);
@@ -74,7 +73,6 @@ int	Resource::serveFile(Config &config) {
 	ev.events = EPOLLOUT;
 	ev.data.fd = clientFd;
 	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, clientFd, &ev);
-	return 1;
 }
 
 void Resource::handleCGI(Config &config, std::string finalPath) {
@@ -120,7 +118,6 @@ void Resource::uploadFile(Config &config) {
 	resp.response_body = fileContent;
 
 	std::string buffer = resToString(resp);
-
 	config.events[clientFd].buffer = buffer;
 	config.events[clientFd].bytes = buffer.size();
 
