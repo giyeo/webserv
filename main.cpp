@@ -3,14 +3,18 @@
 
 void sendResponse(Config &config) {
 	t_event &event = config.events[config.clientFd];
+	int clientFd = config.clientFd;
 	
 	std::string responseString = event.buffer;
 	const char* buffer = responseString.c_str();
-	
+
 	int bytesSent = 0;
 	while (event.totalSent < event.bytes) {
 		ssize_t maxChunkSize = std::min((ssize_t)4096, event.bytes - event.totalSent);
-		bytesSent = send(config.clientFd, buffer + event.totalSent, maxChunkSize, 0);
+		if(event.type == SERVICE)
+			bytesSent = fwrite(buffer + event.totalSent, 1, maxChunkSize, config.events[clientFd].fp);
+		else
+			bytesSent = send(config.clientFd, buffer + event.totalSent, maxChunkSize, 0);
 		if (bytesSent < 0) {
 			log(__FILE__, __LINE__, "Waiting to write", LOG);
 			break;
@@ -18,20 +22,18 @@ void sendResponse(Config &config) {
 		event.totalSent += bytesSent;
 		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
 		if (event.totalSent == event.bytes) {
+			if(event.type == SERVICE)
+				pclose(config.events[clientFd].fp);
 			log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
 			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
 			config.events.erase(config.clientFd);
-			close(config.clientFd);
+			if(event.type != SERVICE)
+				close(config.clientFd);
 		}
 		if (event.totalSent >= 16000) {
-            log(__FILE__, __LINE__, "Exiting the function early to re-enter epoll", LOG);
-			// epoll_event event;
-			// event.events = EPOLLOUT | EPOLLET;
-			// event.data.fd = config.clientFd;
-			// if (epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &event) == -1)
-			// 	log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);
+			log(__FILE__, __LINE__, "Exiting the function early to re-enter epoll", LOG);
 			break;
-        }
+		}
 	}
 	std::cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n\n\n\n";
 }
@@ -161,10 +163,14 @@ void buildEvent(Config &config, int eventFd) {
 	if (eventFdIsServerSocket(eventFd, config.serverSockets)) {
 		config.events[eventFd].type = SERVER;
 		config.events[eventFd].fd[SERVER] = eventFd;
-	}
+	} 
 	else {
 		config.events[eventFd].type = CLIENT;
 		config.events[eventFd].fd[CLIENT] = eventFd;
+	} 
+	if  (config.events[eventFd].fp != NULL) {
+		config.events[eventFd].type = SERVICE;
+		config.events[eventFd].fd[SERVICE] = eventFd;
 	}
 }
 
@@ -183,7 +189,6 @@ void createEventPoll(Config &config) {
 			int eventFd = events[i].data.fd;
 			buildEvent(config, eventFd);
 			int type = config.events[eventFd].type;
-
 			if (type == SERVER) {
 				config.serverFd = eventFd;
 				serverEvent(config);
@@ -201,6 +206,12 @@ void createEventPoll(Config &config) {
 				}
 				if(events[i].events & EPOLLOUT) {
 					log(__FILE__, __LINE__, "Sending on ClientFd", WARNING);
+					sendResponse(config);
+				}
+			}
+			if (type == SERVICE) {
+				if(events[i].events & EPOLLOUT) {
+					log(__FILE__, __LINE__, "Sending on ServiceFd", WARNING);
 					sendResponse(config);
 				}
 			}

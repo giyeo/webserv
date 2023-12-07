@@ -32,7 +32,7 @@ t_finalPath GetPath::returnFinalPath(std::string finalPath, std::string errorPag
 }
 
 t_finalPath GetPath::uriIsRoot(Server &server) {
-	std::string indx = (server.index.empty()) ? "/index.html" : '/' + server.index;
+	std::string indx = (server.index.empty()) ? "/" : '/' + server.index;
 	return returnFinalPath(server.root + indx, getErrorPage(server, -1), -1);
 }
 

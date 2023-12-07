@@ -18,13 +18,14 @@
 
 typedef struct s_event {
 	int type;
-	int fd[2];
+	int fd[3];
 	std::string buffer;
 	ssize_t bytes;
 	ssize_t totalSent;
 	ssize_t totalLeft;
 	Request req;
-	s_event() : type(NONE), bytes(0), totalSent(0), totalLeft(0) {}
+	FILE *fp;
+	s_event() : type(NONE), bytes(0), totalSent(0), totalLeft(0), fp(NULL) {}
 }	t_event;
 
 class Config {

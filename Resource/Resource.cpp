@@ -54,7 +54,7 @@ int	Resource::serveFile(Config &config) {
 
 	if (ft_find(finalPath.finalPath, ".py") && finalPath.locationIndex != -1) {
 		if(config.server.server.locations[finalPath.locationIndex].proxyPass == finalPath.filename)
-			handleCGI(finalPath.finalPath, config.httpReq, serverName, clientFd);
+			handleCGI(config, finalPath.finalPath);
 		return 1;
 	}
 
@@ -78,36 +78,31 @@ int	Resource::serveFile(Config &config) {
 	return 1;
 }
 
-void Resource::handleCGI(std::string finalPath, Request &httpReq, std::string serverName, int clientFd) {
+void Resource::handleCGI(Config &config, std::string finalPath) {
+	log(__FILE__, __LINE__, "Entering handleCGI", LOG);
 	response_object resp;
-	std::string command = "python3 " + finalPath;	
-	
-	(void)httpReq;
+	std::string command = "python3 " + finalPath;
+	int clientFd = config.clientFd;
 
-	setenv("REQUEST_METHOD", "GET", 1);
-	FILE *fp = popen(command.c_str(), "r");
+	setenv("CLIENT_FD", intToString(clientFd).c_str(), 1);
+	setenv("REQUEST_METHOD", config.httpReq.getMethod().c_str(), 1);
+	FILE *fp = popen(command.c_str(), "w");
 	if (fp == NULL) {
 		std::cerr << "Error opening pipe" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	
-	char buffer[1024];
-	std::string res;
-	while (fgets(buffer, 1024, fp) != NULL) {
-		res += buffer;
-	}
-	pclose(fp);
 
-	resp.content_type = getContentType(res);
-	resp.content_length = itos(res.length());
-	resp.server = serverName;
-	resp.response_body = res;
-	if(resp.content_type == "video/mp4" || resp.content_type == "audio/mp3")
-		resp.filename = getFileName(res);
+	std::string resbuffer = config.events[clientFd].buffer;  // httpRes.toString();
+	config.events[clientFd].type = SERVICE;
+	config.events[clientFd].buffer = resbuffer;
+	config.events[clientFd].bytes = resbuffer.size();
+	config.events[clientFd].fp = fp;
 
-	Response httpRes(resp);
-	httpRes.sendResponse(clientFd);
-	close(clientFd);
+	epoll_event event;
+	event.events = EPOLLOUT | EPOLLET;
+	event.data.fd = config.clientFd;
+	if (epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &event) == -1)
+		log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);
 }
 
 void Resource::uploadFile(Config &config) {
