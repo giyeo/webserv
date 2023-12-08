@@ -77,12 +77,24 @@ void clientForwarding(Config &config) {
 	}
 }
 
-bool getServer(Config &config) {
+void printVectorServers(std::vector<Server> serverBlocks) {
+	for (size_t i = 0; i < serverBlocks.size(); i++) {
+		printVector(serverBlocks[i].serverName);
+		std::cout << "address: " << serverBlocks[i].address << std::endl;
+		std::cout << "listen: " << serverBlocks[i].listen << std::endl;
+		std::cout << "root: " << serverBlocks[i].root << std::endl;
+		std::cout << "index: " << serverBlocks[i].index << std::endl;
+		std::cout << "errorPage: " << serverBlocks[i].errorPage << std::endl;
+		std::cout << "clientMaxBodySize: " << serverBlocks[i].clientMaxBodySize << std::endl;
+	}
+}
 
+bool getServer(Config &config) {
 	std::vector<Server> serverBlocks = config.serverBlocks[config.httpReq.getHeaders()["Host"]][config.httpReq.getHeaders()["Port"]];
+	printVectorServers(serverBlocks);
 	for (size_t i = 0; i < serverBlocks.size(); i++) {
 		std::vector<std::string> serverNames = serverBlocks[i].serverName; 
-		for (size_t j = 0; serverNames.size(); j++) {
+		for (size_t j = 0; j < serverNames.size(); j++) {
 			if (config.httpReq.getHeaders()["Host"] == serverNames[j]) {
 				config.server.server = serverBlocks[i];
 				return true;
@@ -103,8 +115,12 @@ void clientEvent(Config &config) {
 			Request httpReq((const char *)&buffer);
 			config.httpReq = httpReq;
 			config.events[clientFd].req = httpReq;
-			if (getServer(config) == 0)
-				return ;
+			if (getServer(config) == 0) {
+                epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+                close(config.clientFd);
+                config.events.erase(clientFd);
+                return ;
+            }
 			config.events[clientFd].req.maxBodySize = atoi(config.server.server.clientMaxBodySize.c_str());
 		}
 		config.events[clientFd].buffer.append(buffer);
@@ -183,7 +199,6 @@ void createEventPoll(Config &config) {
 					log(__FILE__, __LINE__, "Reading from ClientFd", WARNING);
 					config.serverFd = config.events[eventFd].fd[SERVER];
 					// config.server = getServerByFd(config.serverFd, config.serverSockets);
-
 					clientEvent(config);
 				}
 				if(events[i].events & EPOLLOUT) {

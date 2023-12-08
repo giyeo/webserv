@@ -1,8 +1,6 @@
 #include "Server.hpp"
 
-Server::Server() : clientMaxBodySize("8196") {
-	serverName.push_back("default");
-}
+Server::Server() : address("localhost"), clientMaxBodySize("8196") {}
 Server::~Server() {}
 
 void Server::parseServerName(std::string value){

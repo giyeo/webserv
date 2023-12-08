@@ -63,7 +63,6 @@ void Request::parseRequestLine(std::vector<std::string> token) {
 		this->method = token[0];
 		this->path = token[1];
 	} else {
-		std::cout << token[0] << "|\n";
 		std::cerr << "HTTP RESPONSE: NOT IMPLEMENTED\n";
 		exit(1); //HTTP RESPONSE: NOT IMPLEMENTED
 	}
@@ -81,6 +80,9 @@ bool Request::parseHeaders(std::vector<std::string> token) {
 	if(token[1][lastDigit] == '\r')
 		token[1] = token[1].substr(0, lastDigit);
 	if (token.size() == 3) {
+		lastDigit = token[2].length() - 1;
+		if(token[2][lastDigit] == '\r')
+			token[2] = token[2].substr(0, lastDigit);
 		this->headers["Port"] = token[2];
 	}
 	std::string value = token[1];
