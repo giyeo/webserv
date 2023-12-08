@@ -42,6 +42,11 @@ void Resource::serveFile(Config &config) {
 	std::string serverName = config.server.server.serverName[0];
 	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
 
+	if(config.server.server.locations[finalPath.locationIndex].methods.find("GET") == std::string::npos) {
+		errorPage(config, "405", "Method not allowed");
+		return ;
+	}
+
 	fileContent = readFile(finalPath.finalPath);
 	if(fileContent == "") {
 		std::string pathErrorPage = finalPath.errorPage;

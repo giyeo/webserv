@@ -73,7 +73,7 @@ void clientForwarding(Config &config) {
 		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
 			Resource res(config);
 		else
-			maxBodySizeResponse(config);
+			errorPage(config, "413", "Request Entity Too Large");
 	}
 }
 

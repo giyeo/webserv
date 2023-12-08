@@ -26,6 +26,14 @@ void Location::parseProxyPass(std::string value) {
 	this->proxyPass = value;
 }
 
+void Location::parseMethods(std::string value) {
+	this->methods = value;
+}
+
+void Location::parseAutoIndex(std::string value) {
+	this->autoindex = value;
+}
+
 typedef void (Location::*MemberFunction)(std::string);
 
 void Location::dispatcher(std::string key, std::string value) {
@@ -34,12 +42,16 @@ void Location::dispatcher(std::string key, std::string value) {
 	names.push_back("index");
 	names.push_back("error_page");
 	names.push_back("proxy_pass");
+	names.push_back("methods");
+	names.push_back("autoindex");
 
 	std::vector<MemberFunction> functionPointers;
     functionPointers.push_back(&Location::parseRoot);
     functionPointers.push_back(&Location::parseIndex);
     functionPointers.push_back(&Location::parseErrorPage);
 	functionPointers.push_back(&Location::parseProxyPass);
+	functionPointers.push_back(&Location::parseMethods);
+	functionPointers.push_back(&Location::parseAutoIndex);
 	
 	if(names.size() != functionPointers.size()) {
 		std::cout << "diferent sizes in dispatcher\n";

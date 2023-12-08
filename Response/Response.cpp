@@ -1,5 +1,62 @@
 #include "Response.hpp"
 
+std::string errorHtml(std::string error_code, std::string error_text) {
+    std::ostringstream errorPage;
+
+    // Append the HTML template with dynamic values
+    errorPage << "<!DOCTYPE html>\n"
+              << "<html lang=\"en\">\n"
+              << "<head>\n"
+              << "    <meta charset=\"UTF-8\">\n"
+              << "    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n"
+              << "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+              << "    <title>Error Page</title>\n"
+              << "    <style>\n"
+              << "        body {\n"
+              << "            font-family: 'Arial', sans-serif;\n"
+              << "            background-color: #f4f4f4;\n"
+              << "            color: #333;\n"
+              << "            text-align: center;\n"
+              << "            margin: 0;\n"
+              << "            padding: 0;\n"
+              << "            display: flex;\n"
+              << "            align-items: center;\n"
+              << "            justify-content: center;\n"
+              << "            height: 100vh;\n"
+              << "        }\n"
+              << "\n"
+              << "        .error-container {\n"
+              << "            background-color: #fff;\n"
+              << "            border-radius: 8px;\n"
+              << "            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n"
+              << "            padding: 20px;\n"
+              << "            max-width: 400px;\n"
+              << "            width: 100%;\n"
+              << "        }\n"
+              << "\n"
+              << "        h1 {\n"
+              << "            color: #e44d26;\n"
+              << "        }\n"
+              << "\n"
+              << "        p {\n"
+              << "            margin-top: 10px;\n"
+              << "            font-size: 18px;\n"
+              << "        }\n"
+              << "    </style>\n"
+              << "</head>\n"
+              << "<body>\n"
+              << "    <div class=\"error-container\">\n"
+              << "        <h1>Error " << error_code << "</h1>\n"
+              << "        <p>" << error_text << "</p>\n"
+              << "    </div>\n"
+              << "</body>\n"
+              << "</html>\n";
+
+    // Get the concatenated HTML string
+    return errorPage.str();
+}
+
+
 void sendToClientOrService(Config &config, std::string errorString) {
 	int clientFd = config.clientFd;
 	t_event &event = config.events[clientFd];
@@ -60,19 +117,20 @@ void notFoundResponse(Config &config, std::string content) {
 	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &ev);
 }
 
-void maxBodySizeResponse(Config &config) {
+void errorPage(Config &config, std::string code, std::string text) {
 	response_object resp;
 
-	resp.status_code = "413";
-	resp.status_text = "Request Entity Too Large";
+	resp.status_code = code;
+	resp.status_text = text;
 	resp.date = __DATE__;
 	resp.server = config.server.server.serverName[0];
-	resp.content_type = "text/plain";
+	resp.content_type = "text/html";
+	resp.response_body = errorHtml(code, text);
 
+	log(__FILE__, __LINE__, concat(3, code.c_str(), ": ", text.c_str()), FAILED);
 	std::string errorResponseString = resToString(resp);
 	config.events[config.clientFd].buffer = errorResponseString;
 	config.events[config.clientFd].bytes = errorResponseString.size();
-
 	struct epoll_event ev;
 	ev.events = EPOLLOUT;
 	ev.data.fd = config.clientFd;
