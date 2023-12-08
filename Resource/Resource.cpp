@@ -42,9 +42,18 @@ void Resource::serveFile(Config &config) {
 	std::string serverName = config.server.server.serverName[0];
 	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
 
-	if(config.server.server.locations[finalPath.locationIndex].methods.find("GET") == std::string::npos) {
-		errorPage(config, "405", "Method not allowed");
-		return ;
+	if(finalPath.locationIndex != -1) {
+		Location myLocation = config.server.server.locations[finalPath.locationIndex];
+		if(myLocation.returnCode.empty() == 0) {
+			log(__FILE__, __LINE__, "RETURNING", WARNING);
+			redirectPage(config, myLocation.returnCode, myLocation.returnPath);
+			return ;
+		}
+
+		if(myLocation.methods.find("GET") == std::string::npos) {
+			errorPage(config, "405", "Method not allowed");
+			return ;
+		}
 	}
 
 	fileContent = readFile(finalPath.finalPath);
@@ -138,7 +147,7 @@ Resource::Resource(Config &config) {
 	log(__FILE__,__LINE__,"Dispaching Resource", LOG);
 	std::string resourcePath = config.httpReq.getPath();
 	std::string method = config.httpReq.getMethod();
-	//
+
 	log(__FILE__,__LINE__,method.c_str(), LOG);
 	if (method == "GET") {
 		serveFile(config);

@@ -42,3 +42,4 @@ void sendResponse(int clientFd);
 void notFoundResponse(Config &config, std::string content);
 void sendToClientOrService(Config &config, std::string errorString);
 void errorPage(Config &config, std::string code, std::string text);
+void redirectPage(Config &config, std::string code, std::string path);

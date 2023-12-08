@@ -34,6 +34,16 @@ void Location::parseAutoIndex(std::string value) {
 	this->autoindex = value;
 }
 
+void Location::parseReturn(std::string value) {
+	std::vector<std::string> tokens = tokenizer(value, ' ');
+
+	if(tokens.size() != 2)
+		log(__FILE__,__LINE__,"invalid return directive", ERROR);
+	
+	this->returnCode = tokens[0];
+	this->returnPath = tokens[1];
+}
+
 typedef void (Location::*MemberFunction)(std::string);
 
 void Location::dispatcher(std::string key, std::string value) {
@@ -44,6 +54,7 @@ void Location::dispatcher(std::string key, std::string value) {
 	names.push_back("proxy_pass");
 	names.push_back("methods");
 	names.push_back("autoindex");
+	names.push_back("return");
 
 	std::vector<MemberFunction> functionPointers;
     functionPointers.push_back(&Location::parseRoot);
@@ -52,6 +63,7 @@ void Location::dispatcher(std::string key, std::string value) {
 	functionPointers.push_back(&Location::parseProxyPass);
 	functionPointers.push_back(&Location::parseMethods);
 	functionPointers.push_back(&Location::parseAutoIndex);
+	functionPointers.push_back(&Location::parseReturn);
 	
 	if(names.size() != functionPointers.size()) {
 		std::cout << "diferent sizes in dispatcher\n";

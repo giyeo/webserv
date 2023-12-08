@@ -18,6 +18,8 @@ class Location {
 		std::string proxyPass;
 		std::string autoindex;
 		std::string methods;
+		std::string returnCode;
+		std::string returnPath;
 
 		void parseRoot(std::string value);
 		void parseIndex(std::string value);
@@ -25,5 +27,6 @@ class Location {
 		void parseProxyPass(std::string value);
 		void parseAutoIndex(std::string value);
 		void parseMethods(std::string value);
+		void parseReturn(std::string value);
 		void dispatcher(std::string key, std::string value);
 };

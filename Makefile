@@ -1,8 +1,8 @@
 # Compiler
-CXX = g++
+CXX = c++
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++98 
+CXXFLAGS = -Wall -Wextra -std=c++98
 
 # Source files and output executable
 SRCS =	Parser/Location.cpp \

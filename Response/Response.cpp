@@ -1,5 +1,6 @@
 #include "Response.hpp"
 
+
 std::string errorHtml(std::string error_code, std::string error_text) {
     std::ostringstream errorPage;
 
@@ -104,7 +105,6 @@ void notFoundResponse(Config &config, std::string content) {
 	resp.status_text = "Moved Temporarily";
 	resp.date = __DATE__;
 	resp.server = config.server.server.serverName[0];
-	resp.content_type = "text/html";
 	resp.location = content;
 
 	std::string errorResponseString = resToString(resp);
@@ -116,6 +116,25 @@ void notFoundResponse(Config &config, std::string content) {
 	ev.data.fd = config.clientFd;
 	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &ev);
 }
+
+void redirectPage(Config &config, std::string code, std::string path) {
+	response_object resp;
+
+	resp.status_code = code;
+	resp.status_text = "Returni";
+	resp.date = __DATE__;
+	resp.server = config.server.server.serverName[0];
+	resp.location = "http://" + path;
+
+	std::string errorResponseString = resToString(resp);
+	config.events[config.clientFd].buffer = errorResponseString;
+	config.events[config.clientFd].bytes = errorResponseString.size();
+
+	struct epoll_event ev;
+	ev.events = EPOLLOUT;
+	ev.data.fd = config.clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &ev);
+} 
 
 void errorPage(Config &config, std::string code, std::string text) {
 	response_object resp;

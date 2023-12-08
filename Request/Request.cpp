@@ -182,7 +182,7 @@ std::map<std::string, std::string> Request::parseQueryParameters(std::string ful
             param = fullPath.substr(pos); // Extract the last parameter
         }
 
-        size_t equalPos = param.find('=');
+        size_t equalPos = param.find(':');
 
         if (equalPos != param.npos) {
             std::string key = param.substr(0, equalPos);
