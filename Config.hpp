@@ -31,6 +31,7 @@ class Config {
 		std::map<int, t_event> events;
 		std::vector<SocketHandler> serverSockets;
 		std::vector<Server> servers;
+		std::map<std::string, std::map<std::string, std::vector<Server> > > serverBlocks;
 
 		//Redefined at Each request
 		SocketHandler server;

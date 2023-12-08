@@ -11,11 +11,11 @@ void Server::parseServerName(std::string value){
 }
 
 void Server::parseListen(std::string value){
-	for(size_t i = 0; i < value.size(); i++) {
-		if(!isdigit(value[i]) && value[i] != '.' && value[i] != ':') {
-			std::cerr << "Invalid listen value" << std::endl;
-			exit(EXIT_FAILURE);
-		}
+	std::vector<std::string> tokens = tokenizer(value, ':');
+	if (tokens.size() == 2){
+		this->address = tokens[0];
+		this->listen = tokens[1];
+		return ;
 	}
 	this->listen = value;
 }

@@ -77,18 +77,35 @@ void clientForwarding(Config &config) {
 	}
 }
 
+bool getServer(Config &config) {
+
+	std::vector<Server> serverBlocks = config.serverBlocks[config.httpReq.getHeaders()["Host"]][config.httpReq.getHeaders()["Port"]];
+	for (size_t i = 0; i < serverBlocks.size(); i++) {
+		std::vector<std::string> serverNames = serverBlocks[i].serverName; 
+		for (size_t j = 0; serverNames.size(); j++) {
+			if (config.httpReq.getHeaders()["Host"] == serverNames[j]) {
+				config.server.server = serverBlocks[i];
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void clientEvent(Config &config) {
 	int clientFd = config.clientFd;
-	SocketHandler serverSocket = config.server;
 	char buffer[8196];
 	ssize_t bytesRead;
 
 	while ((bytesRead = recv(clientFd, buffer, sizeof(buffer), 0)) > 0) {
 		buffer[bytesRead] = '\0';
 		if(config.events[clientFd].req.getMethod().empty()) {
-			Request httpReq((const char *)&buffer, atoi(serverSocket.server.clientMaxBodySize.c_str()));
-			config.events[clientFd].req = httpReq;
+			Request httpReq((const char *)&buffer);
 			config.httpReq = httpReq;
+			config.events[clientFd].req = httpReq;
+			if (getServer(config) == 0)
+				return ;
+			config.events[clientFd].req.maxBodySize = atoi(config.server.server.clientMaxBodySize.c_str());
 		}
 		config.events[clientFd].buffer.append(buffer);
 		config.events[clientFd].bytes += bytesRead;
@@ -165,7 +182,8 @@ void createEventPoll(Config &config) {
 				if(events[i].events & EPOLLIN) {
 					log(__FILE__, __LINE__, "Reading from ClientFd", WARNING);
 					config.serverFd = config.events[eventFd].fd[SERVER];
-					config.server = getServerByFd(config.serverFd, config.serverSockets);
+					// config.server = getServerByFd(config.serverFd, config.serverSockets);
+
 					clientEvent(config);
 				}
 				if(events[i].events & EPOLLOUT) {
@@ -194,6 +212,7 @@ void verifyServers(std::vector<Server> &servers) {
 }
 
 int main(int argc, char **argv) {
+
 	if(argc != 2) {
 		std::cout << "Must have one argument only, example: ./server webserv.conf\n";
 		exit(EXIT_FAILURE);
@@ -205,8 +224,19 @@ int main(int argc, char **argv) {
 	log(__FILE__,__LINE__,"Configuration Parsed", LOG);
 	verifyServers(config.servers);
 	for(size_t i = 0; i < config.servers.size(); i++) {
-		SocketHandler server_socket(config.servers[i]);
-		config.serverSockets.push_back(server_socket);
+		Server block = config.servers[i];
+		if (config.serverBlocks[block.address].empty()) {
+			config.serverBlocks[block.address][block.listen].push_back(block);
+			SocketHandler server_socket(config.servers[i]);
+			config.serverSockets.push_back(server_socket);
+		} 
+		else if (config.serverBlocks[block.address][block.listen].empty()) {
+			config.serverBlocks[block.address][block.listen].push_back(block);
+			SocketHandler server_socket(config.servers[i]);
+			config.serverSockets.push_back(server_socket);
+		}
+		else
+			config.serverBlocks[block.address][block.listen].push_back(block);
 	}
 	log(__FILE__,__LINE__,"Sockets Created", LOG);
 	// Handle accept incoming requests

@@ -42,3 +42,5 @@ enum LogLevel {
 #include <iomanip>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <arpa/inet.h>
+#include <netdb.h>

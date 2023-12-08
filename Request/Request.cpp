@@ -4,7 +4,7 @@ Request::Request() : totalBytesRead(0),  headersLength(0), contentLength(0) {
 
 }
 
-Request::Request(const char *recv, size_t maxBodySize) : totalBytesRead(0), headersLength(0), contentLength(0) , maxBodySize(maxBodySize){
+Request::Request(const char *recv) : totalBytesRead(0), headersLength(0), contentLength(0) {
 	parseRequestLineAndHeaders(recv);
 }
 
@@ -43,7 +43,7 @@ void Request::parseRequestLineAndHeaders(const char *recv) {
 		parseRequestLine(splitLine(line, " "));
 	//PARSE HEADERS
 	while (std::getline(iss, line)) {
-		if(parseHeaders(splitLine(line, ":")) == 1)
+		if(parseHeaders(tokenizer(line, ':')) == 1)
 			break;
 	}
 	this->headersLength = calculateHeadersLength(recv);
@@ -80,6 +80,9 @@ bool Request::parseHeaders(std::vector<std::string> token) {
 	size_t lastDigit = token[1].length() - 1;
 	if(token[1][lastDigit] == '\r')
 		token[1] = token[1].substr(0, lastDigit);
+	if (token.size() == 3) {
+		this->headers["Port"] = token[2];
+	}
 	std::string value = token[1];
 	this->headers[key] = value.substr(1, value.npos);
 	return false;

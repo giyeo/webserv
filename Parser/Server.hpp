@@ -17,6 +17,7 @@ class Server {
 		void dispatcher(std::string key, std::string value);
 		
 		std::vector<std::string> serverName;
+		std::string address;
 		std::string listen;
 		std::string root;
 		std::string index;

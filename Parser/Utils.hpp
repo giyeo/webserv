@@ -15,3 +15,4 @@ void printVector(std::vector<std::string> vector);
 void log(const char *file, int line, const char *description, LogLevel level);
 const char* concat(int count, ...);
 std::string intToString(int value);
+std::string getAddressByName(std::string name);

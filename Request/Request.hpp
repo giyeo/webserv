@@ -6,7 +6,7 @@
 class Request {
 	public:
 		Request();
-		Request(const char *recv, size_t maxBodySize);
+		Request(const char *recv);
 		~Request();
 		void parseRequestLineAndHeaders(const char *recv);
 		bool parseRequestBody();
@@ -33,6 +33,7 @@ class Request {
 		void concatenateRequestBodyBuffer(const char *buffer);
 		std::string requestBodyBuffer;
 		ssize_t totalBytesRead;
+		size_t maxBodySize;
 	private:
 		std::string method;
 		std::string path;
@@ -42,5 +43,4 @@ class Request {
 		unsigned long contentLength;
 		std::map<std::string, std::string> pathVariables;
 		std::map<std::string, std::string> headers;
-		size_t maxBodySize;
 };
