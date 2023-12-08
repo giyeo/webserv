@@ -1,5 +1,39 @@
 #include "Resource.hpp"
 
+bool isDirectory(const char *path) {
+    struct stat fileStat;
+
+    // Use stat to get information about the file
+    if (stat(path, &fileStat) != 0) {
+        std::cerr << "Error checking file stat." << std::endl;
+        return false;
+    }
+
+    // Check if it's a directory
+    return S_ISDIR(fileStat.st_mode);
+}
+
+std::string getDirectoryString(std::string path) {
+	DIR *dir;
+    struct dirent *ent;
+	std::string res;
+    // Open the current directory
+    if ((dir = opendir(path.c_str())) != NULL) {
+        // Print all files and directories within the current directory
+        while ((ent = readdir(dir)) != NULL) {
+            res.append(ent->d_name);
+			res.append("\n");
+        }
+        closedir(dir);
+    } else {
+        // Could not open directory
+        std::cerr << "Error opening directory." << std::endl;
+        return "";
+    }
+	return res;
+}
+
+
 std::string getContentType(std::string finalPath) {
 	std::map<std::string, std::string> fileMimeMap;
 	fileMimeMap[".txt"] = "text/plain";
@@ -41,9 +75,17 @@ void Resource::serveFile(Config &config) {
 	t_finalPath finalPath = getPathObj.getFinalPath(config.server.server, uri);
 	std::string serverName = config.server.server.serverName[0];
 	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
+	
 
 	if(finalPath.locationIndex != -1) {
 		Location myLocation = config.server.server.locations[finalPath.locationIndex];
+
+		if(myLocation.autoindex.find("on") != std::string::npos && isDirectory(finalPath.finalPath.c_str())) {
+			log(__FILE__, __LINE__, "Is directory getting values and returning", WARNING);
+			directoryListing(config, getDirectoryString(finalPath.finalPath));
+			return ;
+		}
+
 		if(myLocation.returnCode.empty() == 0) {
 			log(__FILE__, __LINE__, "RETURNING", WARNING);
 			redirectPage(config, myLocation.returnCode, myLocation.returnPath);
@@ -78,10 +120,8 @@ void Resource::serveFile(Config &config) {
 		resp.filename = getFileName(finalPath.finalPath);
 
 	std::string buffer = resToString(resp);
-
 	config.events[clientFd].buffer = buffer;
 	config.events[clientFd].bytes = buffer.size();
-
 	struct epoll_event ev;
 	ev.events = EPOLLOUT;
 	ev.data.fd = clientFd;

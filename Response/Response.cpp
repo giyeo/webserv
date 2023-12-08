@@ -66,9 +66,7 @@ void sendToClientOrService(Config &config, std::string errorString) {
 	const char* buffer = responseString.c_str();
 
 	int bytesSent = 0;
-	ssize_t myEventBytes = event.bytes;
-	ssize_t myTotalSent = event.totalSent;
-	while (myTotalSent < myEventBytes) {
+	while (event.totalSent < event.bytes) {
 		ssize_t maxChunkSize = std::min((ssize_t)16384, event.bytes - event.totalSent);
 		if(event.type == SERVICE)
 			bytesSent = fwrite(buffer + event.totalSent, 1, maxChunkSize, config.events[clientFd].fp);
@@ -79,7 +77,6 @@ void sendToClientOrService(Config &config, std::string errorString) {
 			break;
 		}
 		event.totalSent += bytesSent;
-		myTotalSent = event.totalSent;
 		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
 		if (event.totalSent == event.bytes) {
 			if(event.type == SERVICE) {
@@ -92,8 +89,9 @@ void sendToClientOrService(Config &config, std::string errorString) {
 			}
 			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
 			config.events.erase(clientFd);
+			break;
 		}
-		if (myTotalSent >= 16000) {
+		if (event.totalSent >= 16000) {
 			log(__FILE__, __LINE__, "Exiting the function, re-enter epoll to keep non-blocking", LOG);
 			break;
 		}
@@ -150,6 +148,26 @@ void errorPage(Config &config, std::string code, std::string text) {
 	resp.response_body = errorHtml(code, text);
 
 	log(__FILE__, __LINE__, concat(3, code.c_str(), ": ", text.c_str()), FAILED);
+	std::string errorResponseString = resToString(resp);
+	config.events[config.clientFd].buffer = errorResponseString;
+	config.events[config.clientFd].bytes = errorResponseString.size();
+	struct epoll_event ev;
+	ev.events = EPOLLOUT;
+	ev.data.fd = config.clientFd;
+	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &ev);
+}
+
+void directoryListing(Config &config, std::string content) {
+	response_object resp;
+
+	resp.status_code = 200;
+	resp.status_text = "OK";
+	resp.date = __DATE__;
+	resp.server = config.server.server.serverName[0];
+	resp.content_type = "text/plain";
+	resp.response_body = content;
+
+	log(__FILE__, __LINE__, "Sending directory Listing", FAILED);
 	std::string errorResponseString = resToString(resp);
 	config.events[config.clientFd].buffer = errorResponseString;
 	config.events[config.clientFd].bytes = errorResponseString.size();

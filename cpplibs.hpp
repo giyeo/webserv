@@ -40,3 +40,5 @@ enum LogLevel {
 #include <stdexcept>
 #include <cstdarg>
 #include <iomanip>
+#include <sys/stat.h>
+#include <dirent.h>
