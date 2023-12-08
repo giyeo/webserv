@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Main.hpp"
+#include "../cpplibs.hpp"
 #include "Utils.hpp"
 
 #define GET 0

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Main.hpp"
+#include "../cpplibs.hpp"
 
 std::string trimString(const std::string& str);
 bool contains(std::vector<std::string> vector, std::string target);

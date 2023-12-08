@@ -2,7 +2,7 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include "Main.hpp"
+#include "cpplibs.hpp"
 #include "Communication/SocketHandler.hpp"
 #include "Request/Request.hpp"
 
