@@ -66,7 +66,9 @@ void sendToClientOrService(Config &config, std::string errorString) {
 	const char* buffer = responseString.c_str();
 
 	int bytesSent = 0;
-	while (event.totalSent < event.bytes) {
+	ssize_t myEventBytes = event.bytes;
+	ssize_t myTotalSent = event.totalSent;
+	while (myTotalSent < myEventBytes) {
 		ssize_t maxChunkSize = std::min((ssize_t)16384, event.bytes - event.totalSent);
 		if(event.type == SERVICE)
 			bytesSent = fwrite(buffer + event.totalSent, 1, maxChunkSize, config.events[clientFd].fp);
@@ -77,20 +79,21 @@ void sendToClientOrService(Config &config, std::string errorString) {
 			break;
 		}
 		event.totalSent += bytesSent;
+		myTotalSent = event.totalSent;
 		log(__FILE__, __LINE__, concat(4,"bytesSent: ", intToString(event.totalSent).c_str(), "/", intToString(event.bytes).c_str()), LOG);
 		if (event.totalSent == event.bytes) {
 			if(event.type == SERVICE) {
 				log(__FILE__, __LINE__, "Success on Sending to the service, Erasing event, removing from epoll", LOG);
 				pclose(config.events[clientFd].fp);
 			}
-			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-			config.events.erase(clientFd);
 			if(event.type != SERVICE) {
 				log(__FILE__, __LINE__, "Success on Sending to the client, Closing FD, Erasing event, removing from epoll", LOG);
 				close(clientFd);
 			}
+			epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+			config.events.erase(clientFd);
 		}
-		if (event.totalSent >= 16000) {
+		if (myTotalSent >= 16000) {
 			log(__FILE__, __LINE__, "Exiting the function, re-enter epoll to keep non-blocking", LOG);
 			break;
 		}

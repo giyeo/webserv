@@ -70,7 +70,7 @@ void clientForwarding(Config &config) {
 		log(__FILE__, __LINE__, "Data fully Received", LOG);
 		std::string requestBuffer = config.events[clientFd].buffer.substr(config.events[clientFd].req.getHeadersLength() , config.events[clientFd].buffer.size());
 		config.events[clientFd].req.requestBodyBuffer = requestBuffer;
-		if(config.events[clientFd].req.parseRequestBody(clientFd, serverSocket.server.serverName[0]))
+		if(config.events[clientFd].req.parseRequestBody())
 			Resource res(config);
 		else
 			errorPage(config, "413", "Request Entity Too Large");

@@ -2,7 +2,7 @@
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++98
+CXXFLAGS = -Wall -Wextra -std=c++98 -fsanitize=address
 
 # Source files and output executable
 SRCS =	Parser/Location.cpp \
@@ -50,7 +50,7 @@ $(TEST_TARGET): $(TEST_OBJS)
 clean:
 	rm -f $(TARGET)
 
-re: clean all
+re: cleano all
 
 cleano:
 	rm -rf */*.o && rm -rf ./*.o

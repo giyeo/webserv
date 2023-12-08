@@ -60,7 +60,6 @@ void Resource::serveFile(Config &config) {
 	if(fileContent == "") {
 		std::string pathErrorPage = finalPath.errorPage;
 		log(__FILE__, __LINE__, concat(2, "Redirecting to: ", pathErrorPage.c_str()), WARNING);
-		config.events.erase(clientFd);
 		notFoundResponse(config, pathErrorPage);
 		return ;
 	}
