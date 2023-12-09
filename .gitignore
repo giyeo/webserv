@@ -2,4 +2,4 @@ server
 .vscode
 *.o
 test
-webserver
+webserv
