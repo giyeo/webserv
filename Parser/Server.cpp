@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-Server::Server() : address("localhost"), clientMaxBodySize("8196") {}
+Server::Server() : address("127.0.0.1"), clientMaxBodySize("8196") {}
 Server::~Server() {}
 
 void Server::parseServerName(std::string value){
@@ -11,7 +11,7 @@ void Server::parseServerName(std::string value){
 void Server::parseListen(std::string value){
 	std::vector<std::string> tokens = tokenizer(value, ':');
 	if (tokens.size() == 2){
-		this->address = tokens[0];
+		this->address = (tokens[0].compare("localhost") == 0) ? "127.0.0.1" : tokens[0];
 		this->listen = tokens[1];
 		return ;
 	}

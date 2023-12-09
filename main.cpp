@@ -90,11 +90,14 @@ void printVectorServers(std::vector<Server> serverBlocks) {
 }
 
 bool getServer(Config &config) {
-	std::vector<Server> serverBlocks = config.serverBlocks[config.httpReq.getHeaders()["Host"]][config.httpReq.getHeaders()["Port"]];
+	std::cout << getAddressByName(config.httpReq.getHeaders()["Host"]) << "\n";
+	std::cout << config.httpReq.getHeaders()["Host"] << " | " << config.httpReq.getHeaders()["Port"] << "\n";
+	std::vector<Server> serverBlocks = config.serverBlocks[getAddressByName(config.httpReq.getHeaders()["Host"])][config.httpReq.getHeaders()["Port"]];
 	printVectorServers(serverBlocks);
 	for (size_t i = 0; i < serverBlocks.size(); i++) {
 		std::vector<std::string> serverNames = serverBlocks[i].serverName; 
 		for (size_t j = 0; j < serverNames.size(); j++) {
+			std::cout << config.httpReq.getHeaders()["Host"] << "|" << serverNames[j] << "\n";
 			if (config.httpReq.getHeaders()["Host"] == serverNames[j]) {
 				config.server.server = serverBlocks[i];
 				return true;
