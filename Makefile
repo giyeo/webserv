@@ -2,7 +2,7 @@
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++98 -fsanitize=address
+CXXFLAGS = -Werror -Wall -Wextra -std=c++98 -fsanitize=address
 
 # Source files and output executable
 SRCS =	Parser/Location.cpp \
@@ -32,7 +32,7 @@ MINUNIT_SRCS_FILES =	minunit.c \
 OBJS = $(SRCS:.cpp=.o)
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
-TARGET = server
+TARGET = webserv
 TEST_TARGET = test
 
 all: $(TARGET)
