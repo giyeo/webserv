@@ -75,7 +75,6 @@ void Resource::serveFile(Config &config) {
 	t_finalPath finalPath = getPathObj.getFinalPath(config.server.server, uri);
 	std::string serverName = config.serverName;
 	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
-	
 
 	if(finalPath.locationIndex != -1) {
 		Location myLocation = config.server.server.locations[finalPath.locationIndex];
@@ -92,7 +91,7 @@ void Resource::serveFile(Config &config) {
 			return ;
 		}
 
-		if(myLocation.methods.find("GET") == std::string::npos) {
+		if(myLocation.methods.find(config.httpReq.getMethod()) == std::string::npos) {
 			errorPage(config, "405", "Method not allowed");
 			return ;
 		}
@@ -107,9 +106,15 @@ void Resource::serveFile(Config &config) {
 	}
 
 	if (ft_find(finalPath.finalPath, ".py") && finalPath.locationIndex != -1) {
-		if(config.server.server.locations[finalPath.locationIndex].proxyPass == finalPath.filename)
-			handleCGI(config, finalPath.finalPath);
-		return ;
+		if(config.server.server.locations[finalPath.locationIndex].proxyPass == finalPath.filename) {
+			if (config.httpReq.getMethod() == "POST")
+				handleCGI(config, finalPath.finalPath, "POST");
+			else if (config.httpReq.getMethod() == "DELETE")
+				handleCGI(config, finalPath.finalPath, "DELETE");
+			else
+				handleCGI(config, finalPath.finalPath, "GET");
+			return ;
+		}
 	}
 
 	resp.content_type = getContentType(finalPath.finalPath);
@@ -128,12 +133,25 @@ void Resource::serveFile(Config &config) {
 	epoll_ctl(config.epollFd, EPOLL_CTL_MOD, clientFd, &ev);
 }
 
-void Resource::handleCGI(Config &config, std::string finalPath) {
+void Resource::handleCGI(Config &config, std::string finalPath, std::string method) {
 	log(__FILE__, __LINE__, "Entering handleCGI", LOG);
+	log(__FILE__, __LINE__, method.c_str(), LOGBLUE);
+	
 	response_object resp;
 	std::string command = "python3 " + finalPath;
 	int clientFd = config.clientFd;
+	if(config.httpReq.getHeaders()["uploadName"].empty()) {
+		log(__FILE__, __LINE__, "uploadName must be set in headers for CGI use", FAILED);
+		epoll_ctl(config.epollFd, EPOLL_CTL_DEL, config.clientFd, NULL);
+		config.events.erase(clientFd);
+		close(config.clientFd);
+	}
+	
+	size_t lastSlashPos = finalPath.find_last_of('/');
+    std::string directory = finalPath.substr(0, lastSlashPos + 1);
 
+	setenv("PATH_INFO", directory.c_str(), 1);
+	setenv("UPLOADNAME", config.httpReq.getHeaders()["uploadName"].c_str(), 1);
 	setenv("CLIENT_FD", intToString(clientFd).c_str(), 1);
 	setenv("REQUEST_METHOD", config.httpReq.getMethod().c_str(), 1);
 	FILE *fp = popen(command.c_str(), "w");
@@ -149,10 +167,10 @@ void Resource::handleCGI(Config &config, std::string finalPath) {
 	config.events[clientFd].fp = fp;
 
 	epoll_event event;
-	event.events = EPOLLOUT | EPOLLET;
+	event.events = EPOLLOUT;
 	event.data.fd = config.clientFd;
 	if (epoll_ctl(config.epollFd, EPOLL_CTL_MOD, config.clientFd, &event) == -1)
-		log(__FILE__,__LINE__,"epoll_ctl failed", ERROR);
+		log(__FILE__,__LINE__,"epoll_ctl failed", FAILED);
 }
 
 void Resource::uploadFile(Config &config) {
@@ -188,13 +206,9 @@ Resource::Resource(Config &config) {
 	std::string method = config.httpReq.getMethod();
 
 	log(__FILE__,__LINE__,method.c_str(), LOG);
-	if (method == "GET") {
+	if (method == "GET" || method == "POST" || method == "DELETE") {
 		serveFile(config);
 	}
-	else if (method == "POST")//TODO POST HANDLING UPLOAD FILES AND ETC TO CGI
-		uploadFile(config);
-	// else if (method == "DELETE");
-		//TODO alguma coisa;
 }
 
 bool Resource::ft_find(std::string str, std::string to_find) const {

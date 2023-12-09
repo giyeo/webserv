@@ -51,7 +51,7 @@ void Location::dispatcher(std::string key, std::string value) {
 	names.push_back("root");
 	names.push_back("index");
 	names.push_back("error_page");
-	names.push_back("proxy_pass");
+	names.push_back("cgi");
 	names.push_back("methods");
 	names.push_back("autoindex");
 	names.push_back("return");

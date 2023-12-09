@@ -112,18 +112,18 @@ void clientEvent(Config &config) {
 	char buffer[8196];
 	ssize_t bytesRead;
 
-	while ((bytesRead = recv(clientFd, buffer, sizeof(buffer), 0)) > 0) {
+	while ((bytesRead = recv(clientFd, buffer, 1000, 0)) > 0) {
 		buffer[bytesRead] = '\0';
 		if(config.events[clientFd].req.getMethod().empty()) {
 			Request httpReq((const char *)&buffer);
 			config.httpReq = httpReq;
 			config.events[clientFd].req = httpReq;
 			if (getServer(config) == 0) {
-                epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
-                close(config.clientFd);
-                config.events.erase(clientFd);
-                return ;
-            }
+				epoll_ctl(config.epollFd, EPOLL_CTL_DEL, clientFd, NULL);
+				close(config.clientFd);
+				config.events.erase(clientFd);
+				return ;
+			}
 			config.events[clientFd].req.maxBodySize = atoi(config.server.server.clientMaxBodySize.c_str());
 		}
 		config.events[clientFd].buffer.append(buffer);
