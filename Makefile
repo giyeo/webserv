@@ -50,9 +50,9 @@ $(TEST_TARGET): $(TEST_OBJS)
 clean:
 	rm -f $(TARGET)
 
-re: cleano all
+re: fclean all
 
-cleano:
+fclean:
 	rm -rf */*.o && rm -rf ./*.o
 
 minunit: $(MINUNIT_SRCS_FILES)
