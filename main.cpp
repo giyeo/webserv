@@ -91,7 +91,6 @@ void printVectorServers(std::vector<Server> serverBlocks) {
 
 bool getServer(Config &config) {
 	std::vector<Server> serverBlocks = config.serverBlocks[getAddressByName(config.httpReq.getHeaders()["Host"])][config.httpReq.getHeaders()["Port"]];
-	printVectorServers(serverBlocks);
 	for (size_t i = 0; i < serverBlocks.size(); i++) {
 		std::vector<std::string> serverNames = serverBlocks[i].serverName; 
 		for (size_t j = 0; j < serverNames.size(); j++) {
@@ -230,15 +229,19 @@ void verifyServers(std::vector<Server> &servers) {
 }
 
 int main(int argc, char **argv) {
-
-	if(argc != 2) {
-		std::cout << "Must have one argument only, example: ./server webserv.conf\n";
+	std::string arg = "default.conf";
+	if(argc > 3) {
+		std::cout << "Must have one or no arguments, example: ./server webserv.conf or ./server\n";
 		exit(EXIT_FAILURE);
 	}
+	if(argc == 2) {
+		arg = argv[1];
+	}
+
 	Config config;
 	
 	log(__FILE__,__LINE__,"Server Started", LOG);
-	config.servers = configurationParser(argv[1]);
+	config.servers = configurationParser(arg.c_str());
 	log(__FILE__,__LINE__,"Configuration Parsed", LOG);
 	verifyServers(config.servers);
 	for(size_t i = 0; i < config.servers.size(); i++) {

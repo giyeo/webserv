@@ -181,18 +181,24 @@ std::string getAddressByName(std::string name) {
     int status;
     char ipstr[INET6_ADDRSTRLEN];
     std::string ip;
+	try {
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
 
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
+		if ((status = getaddrinfo(name.c_str(), NULL, &hints, &res)) != 0)
+			log(__FILE__, __LINE__, concat(3, "getaddrinfo: ", gai_strerror(status), "\n"), FAILED);
 
-    if ((status = getaddrinfo(name.c_str(), NULL, &hints, &res)) != 0)
-        log(__FILE__, __LINE__, concat(3, "getaddrinfo: ", gai_strerror(status), "\n"), ERROR);
-
-    struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
-    void *addr = &(ipv4->sin_addr);
-    inet_ntop(res->ai_family, addr, ipstr, sizeof(ipstr));
-    ip = ipstr;
-    freeaddrinfo(res);
+		struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+		void *addr = &(ipv4->sin_addr);
+		inet_ntop(res->ai_family, addr, ipstr, sizeof(ipstr));
+		ip = ipstr;
+		freeaddrinfo(res);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		return "";
+	}
     return (ip);
 }

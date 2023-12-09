@@ -9,7 +9,6 @@ Request::Request(const char *recv) : totalBytesRead(0), headersLength(0), conten
 }
 
 bool Request::parseRequestBody() {
-	const char *recv = requestBodyBuffer.c_str();
 	contentLength = headersLength["Content-Length"];
 	if(contentLength > maxBodySize) {
 		log(__FILE__, __LINE__, "maxBodySizeError", WARNING);
@@ -17,10 +16,10 @@ bool Request::parseRequestBody() {
 	}
 
 	contentType = headers["Content-Type"];
-	if (this->method == "POST"
-		&& headers["Content-Type"] == "text/plain"
-		&& this->contentLength != 0)
-		replicateHttpRequestContent(recv);
+	// if (this->method == "POST"
+	// 	&& headers["Content-Type"] == "text/plain"
+	// 	&& this->contentLength != 0)
+	// 	replicateHttpRequestContent(recv);
 	return true;
 }
 
@@ -51,21 +50,11 @@ void Request::parseRequestLineAndHeaders(const char *recv) {
 }
 
 void Request::parseRequestLine(std::vector<std::string> token) {
-	std::vector<std::string> methods;
-	methods.push_back("GET");
-	methods.push_back("POST");
-	methods.push_back("DELETE");
 	if(token[0].empty() || token[1].empty()) {
 		std::cerr << "COULD NOT PARSE REQUEST LINE\n";
-		exit(1); //COULD NOT PARSE REQUEST LINE
 	}
-	if (std::find(methods.begin(), methods.end(), token[0]) != methods.end()) {
-		this->method = token[0];
-		this->path = token[1];
-	} else {
-		std::cerr << "HTTP RESPONSE: NOT IMPLEMENTED\n";
-		exit(1); //HTTP RESPONSE: NOT IMPLEMENTED
-	}
+	this->method = token[0];
+	this->path = token[1];
 	pathVariables = parseQueryParameters(path);
 	path = parsePath(path);
 }

@@ -2,4 +2,4 @@
 
 #include "Server.hpp"
 
-std::vector<Server> configurationParser(char *argv);
+std::vector<Server> configurationParser(const char *argv);

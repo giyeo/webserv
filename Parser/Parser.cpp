@@ -82,7 +82,7 @@ std::vector<std::string> parseServers(std::string input) {
 	return servers;
 }
 
-std::vector<Server> configurationParser(char *argv) {
+std::vector<Server> configurationParser(const char *argv) {
 	std::string input = readFile(argv);
 
 	std::vector<std::string> parsedServers = parseServers(input);

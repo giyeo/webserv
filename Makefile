@@ -2,7 +2,7 @@
 CXX = c++
 
 # Compiler flags
-CXXFLAGS = -Werror -Wall -Wextra -std=c++98 -fsanitize=address
+CXXFLAGS = -Werror -Wall -Wextra -std=c++98
 
 # Source files and output executable
 SRCS =	Parser/Location.cpp \

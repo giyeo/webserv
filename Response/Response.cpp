@@ -120,9 +120,14 @@ void notFoundResponse(Config &config, std::string content) {
 
 void redirectPage(Config &config, std::string code, std::string path) {
 	response_object resp;
+	std::string returnText = "Redirection";
+	if(code == "302")
+		returnText = "Moved Temporarily";
+	if(code == "301")
+		returnText = "Moved Permanently";
 
 	resp.status_code = code;
-	resp.status_text = "Returni";
+	resp.status_text = returnText;
 	resp.date = __DATE__;
 	resp.server = config.serverName;
 	resp.location = "http://" + path;

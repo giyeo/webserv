@@ -117,12 +117,17 @@ void Resource::serveFile(Config &config) {
 		}
 	}
 
-	resp.content_type = getContentType(finalPath.finalPath);
-	resp.content_length = itos(fileContent.length());
-	resp.server = serverName;
-	resp.response_body = fileContent;
-	if(resp.content_type == "video/mp4" || resp.content_type == "audio/mp3")
-		resp.filename = getFileName(finalPath.finalPath);
+	if(config.httpReq.getMethod().compare("GET") == 0) {
+		resp.content_type = getContentType(finalPath.finalPath);
+		resp.content_length = itos(fileContent.length());
+		resp.server = serverName;
+		resp.response_body = fileContent;
+		if(resp.content_type == "video/mp4" || resp.content_type == "audio/mp3")
+			resp.filename = getFileName(finalPath.finalPath);
+	} else {
+		errorPage(config, "405", "Method not allowed");
+			return ;
+	}
 
 	std::string buffer = resToString(resp);
 	config.events[clientFd].buffer = buffer;
@@ -208,6 +213,8 @@ Resource::Resource(Config &config) {
 	log(__FILE__,__LINE__,method.c_str(), LOG);
 	if (method == "GET" || method == "POST" || method == "DELETE") {
 		serveFile(config);
+	} else {
+		errorPage(config, "405", "Method Not Allowed");
 	}
 }
 
