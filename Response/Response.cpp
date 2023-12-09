@@ -105,7 +105,7 @@ void notFoundResponse(Config &config, std::string content) {
 	resp.status_code = "302";
 	resp.status_text = "Moved Temporarily";
 	resp.date = __DATE__;
-	resp.server = config.server.server.serverName[0];
+	resp.server = config.serverName;
 	resp.location = content;
 
 	std::string errorResponseString = resToString(resp);
@@ -124,7 +124,7 @@ void redirectPage(Config &config, std::string code, std::string path) {
 	resp.status_code = code;
 	resp.status_text = "Returni";
 	resp.date = __DATE__;
-	resp.server = config.server.server.serverName[0];
+	resp.server = config.serverName;
 	resp.location = "http://" + path;
 
 	std::string errorResponseString = resToString(resp);
@@ -143,7 +143,7 @@ void errorPage(Config &config, std::string code, std::string text) {
 	resp.status_code = code;
 	resp.status_text = text;
 	resp.date = __DATE__;
-	resp.server = config.server.server.serverName[0];
+	resp.server = config.serverName;
 	resp.content_type = "text/html";
 	resp.response_body = errorHtml(code, text);
 
@@ -163,7 +163,7 @@ void directoryListing(Config &config, std::string content) {
 	resp.status_code = 200;
 	resp.status_text = "OK";
 	resp.date = __DATE__;
-	resp.server = config.server.server.serverName[0];
+	resp.server = config.serverName;
 	resp.content_type = "text/plain";
 	resp.response_body = content;
 
@@ -188,7 +188,7 @@ std::string resToString(response_object &res) {
 	.append((!res.content_type.empty()) ? std::string("Content-Type: ").append(res.content_type).append("\n") : "")
 	.append((!res.content_length.empty()) ? std::string("Content-Length: ").append(res.content_length).append("\n") : "")
 	.append((!res.date.empty()) ? std::string("Date: ").append(res.date).append("\n") : "")
-	.append((!res.server.empty()) ? std::string("Server: ").append(res.server).append("\n") : "")
+	.append(std::string("Server: ").append("ft_webserver/0.1").append("\n"))
 	.append((!res.cache_control.empty()) ? std::string("Cache-Control: ").append(res.cache_control).append("\n") : "")
 	.append((!res.set_cookie.empty()) ? std::string("Set-Cookie: ").append(res.set_cookie).append("\n") : "")
 	.append((!res.location.empty()) ? std::string("Location: ").append(res.location).append("\n") : "")

@@ -42,7 +42,6 @@ void SocketHandler::socketBind() {
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = (server.address.empty()) ? INADDR_ANY : inet_addr(getAddressByName(server.address).c_str()); // Listen on all available network interfaces
-	std::cout << server_addr.sin_addr.s_addr << std::endl;
 	server_addr.sin_port = htons(this->port); // Port number (change as needed)
 	if (bind(this->fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
 		perror("Binding failed");

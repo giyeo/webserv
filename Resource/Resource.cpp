@@ -73,7 +73,7 @@ void Resource::serveFile(Config &config) {
 	int clientFd = config.clientFd;
 	GetPath getPathObj;
 	t_finalPath finalPath = getPathObj.getFinalPath(config.server.server, uri);
-	std::string serverName = config.server.server.serverName[0];
+	std::string serverName = config.serverName;
 	log(__FILE__, __LINE__, concat(3, "serveFile --- [", finalPath.finalPath.c_str(), "]"), LOG);
 	
 

@@ -39,6 +39,7 @@ class Config {
 		int epollFd;
 		int serverFd;
 		int clientFd;
+		std::string serverName;
 		
 };
 
